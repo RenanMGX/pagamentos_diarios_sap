@@ -11,10 +11,12 @@ from tkinter import filedialog
 import traceback
 import psutil
 from time import sleep
+import shutil
 import xlwings as xw # type: ignore
 
+
 class LogError:
-    def __init__(self, path:str="log_error.csv") -> None:
+    def __init__(self, file:str="log_error.csv") -> None:
         '''
         construtur da classe define o caminho do arquivo e cria caso ele não exista
         
@@ -24,7 +26,12 @@ class LogError:
         Return:
         None
         '''
-        self.__path: str = path
+
+        self.__path: str = f"C:\\Users\\{getuser()}\\.pagamentos_diarios\\"
+        if not os.path.exists(self.__path):
+            os.mkdir(self.__path)
+        
+        self.__path += file
         if not os.path.exists(self.__path):
             with open(self.__path, "w")as file:
                 type(file)
@@ -39,6 +46,7 @@ class LogError:
         descri: (str) = descrição do errir
         trace: (str) traceback col
         '''
+
         trace = trace.replace('\n', '|||')
         for x in range(5*60):
             try:
@@ -48,6 +56,98 @@ class LogError:
             except PermissionError:
                 print(f"Feche o arquivo {self.__path} para que o registro seja feito")
                 time.sleep(1)
+
+class Rotinas:
+    def __init__(self, data) -> None:
+        self.__data: datetime = data
+        self.__arquivo: str = "controle_pagamento_diario.json"
+        self.__caminho_servidor: str = "\\\\server008\\G\\ARQ_PATRIMAR\\WORK\\TI - RPA\\#controle_scripts\\pagamentos_diarios\\"
+        self.__caminho_local: str = f"C:\\Users\\{getuser()}\\.pagamentos_diarios\\"
+
+        self.__possiveis_rotinas = [
+            ["w", "y"],
+            ["v", "x"],
+            ["s", "u"],
+            ["r", "t"],
+            ["o", "q"],
+            ["n", "p"],
+            ["k", "m"],
+            ["j", "l"],
+            ["g", "i"],
+            ["f", "h"]
+        ]
+
+        #criar a pasta no local
+        if not os.path.exists(self.__caminho_local):
+            os.makedirs(self.__caminho_local)
+        
+        #online
+        if os.path.exists(self.__caminho_servidor):
+            if not os.path.exists(self.__caminho_servidor + self.__arquivo):
+                with open(self.__caminho_servidor + self.__arquivo, 'w')as file:
+                    json.dump([], file)
+                    shutil.copy2(self.__caminho_servidor + self.__arquivo, self.__caminho_local + self.__arquivo)
+        #offline
+        else:
+            if not os.path.exists(self.__caminho_local + self.__arquivo):
+                with open(self.__caminho_local + self.__arquivo, 'w')as file:
+                    json.dump([], file)
+    
+    def proxima_rotina(self) -> list:
+        data = self.__data.strftime("%d/%m/%Y")
+        rotinas: list = []
+        #online
+        if os.path.exists(self.__caminho_servidor):
+            with open(self.__caminho_servidor + self.__arquivo, 'r')as file:
+                rotinas = json.load(file)
+
+            rotinas_hj = [x for x in rotinas if x['data'] == data]
+            if not rotinas_hj:
+                rotinas.append({'data' : data, "rotina": [self.__possiveis_rotinas[0]]})
+                with open(self.__caminho_servidor + self.__arquivo, 'w')as file:
+                    json.dump(rotinas, file)
+                shutil.copy2(self.__caminho_servidor + self.__arquivo, self.__caminho_local + self.__arquivo)
+                return self.__possiveis_rotinas[0]
+
+            quantidade_rotinas_diaria = len(rotinas_hj[0]['rotina'])
+
+            try:
+                rotinas[0]['rotina'].append(self.__possiveis_rotinas[quantidade_rotinas_diaria])
+            except IndexError:
+                raise Exception(f"quantidade maxima de rotinas execida neste dia '{data}'")
+
+
+            with open(self.__caminho_servidor + self.__arquivo, 'w')as file:
+                json.dump(rotinas, file)
+            shutil.copy2(self.__caminho_servidor + self.__arquivo, self.__caminho_local + self.__arquivo)
+
+            return self.__possiveis_rotinas[quantidade_rotinas_diaria]
+
+        #offline
+        else:
+            with open(self.__caminho_local + self.__arquivo, 'r')as file:
+                rotinas = json.load(file)
+
+            rotinas_hj = [x for x in rotinas if x['data'] == data]
+            if not rotinas_hj:
+                rotinas.append({'data' : data, "rotina": [self.__possiveis_rotinas[0]]})
+                with open(self.__caminho_local + self.__arquivo, 'w')as file:
+                    json.dump(rotinas, file)
+                return self.__possiveis_rotinas[0]
+
+            quantidade_rotinas_diaria = len(rotinas_hj[0]['rotina'])
+
+            try:
+                rotinas[0]['rotina'].append(self.__possiveis_rotinas[quantidade_rotinas_diaria])
+            except IndexError:
+                raise Exception(f"quantidade maxima de rotinas execida neste dia '{data}'")
+
+            rotinas[0]['rotina'].append(self.__possiveis_rotinas[quantidade_rotinas_diaria])
+            with open(self.__caminho_local + self.__arquivo, 'w')as file:
+                json.dump(rotinas, file)
+
+            return self.__possiveis_rotinas[quantidade_rotinas_diaria]
+
 
 class F110:
     def __init__(self, dia_execucao:int) -> None:
@@ -63,14 +163,18 @@ class F110:
             raise TypeError("no parametro 'dia_execucao' apenas valores do tipo (int)")
         #Definir Datas
         agora: datetime = datetime.now()
-        data_atual: datetime = agora + relativedelta(days=dia_execucao)
-        self.__data_sap: str = data_atual.strftime('%d.%m.%Y') # Data separada por pontos
-        self.__data_sap_atribuicao: str = data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
-        self.__data_sap_atribuicao2: str = data_atual.strftime('%d.%m')# Valor da Atribuição
+        self.__data_atual: datetime = agora + relativedelta(days=dia_execucao)
+        self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
+        self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
+        self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
         self.__data_proximo_dia: str = (agora + relativedelta(days=(dia_execucao + 1))).strftime('%d.%m.%Y') # Data do dia seguinte a programação de PGTO 
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
         self.nome_arquivo = f"Relatorio_SAP_{datetime.now().strftime('%d%m%Y%H%M%S')}.xlsx"
+
+
+            
+        
 
     def mostrar_datas(self):
         print(f"\n{'-'*20}Datas{'-'*20}")
@@ -119,10 +223,10 @@ class F110:
         '''
         if self._verificar_conexao() == False:
             self._limpar_cache_sap()
-            print("não foi possivel se conectar ao SAP")
+            print("não foi possivel se conectar ao SAP\n")
             return False
         else:
-            print("conexão com o SAP estabelecida")
+            print("conexão com o SAP estabelecida\n")
             return True
 
 
@@ -135,9 +239,9 @@ class F110:
         except:
             pass
 
-    def verificar_status(self, campo):
+    def verificar_status(self, campo, texto_verificar="Proposta de pagamento criada"):
         for status in campo:
-            if "Proposta de pagamento criada".lower() in  self.session.findById(status).Text.lower():
+            if texto_verificar.lower() in  self.session.findById(status).Text.lower():
                 return True
         return False
 
@@ -149,8 +253,7 @@ class F110:
         return lista
 
     def iniciar(self) -> None:
-        #lista: list = ['R000', "G000"]
-        rotinas: dict = {"primeira": "w", "segunda": "y"}
+        procurar_rotinas = Rotinas(self.__data_atual)
 
         if not self._conectar():
             return
@@ -161,32 +264,37 @@ class F110:
                 app.close()
                 sleep(1)
 
-            df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None)
-            df = df['Empresa']
+            df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
+            df = df['Empresa']# type: ignore
 
-            lista: list = df.unique().tolist()
+            lista: list = df.unique().tolist() # type: ignore
             lista = [x for x in lista if x is not None]
 
         else:
             print("sem relatorio")
             return
 
+        #lista: list = ['N000']
+
+        rotinas: list = procurar_rotinas.proxima_rotina()
         self._SAP_OP(
             lista_empresas=lista,
             data_sap=self.__data_sap,
             data_proximo_dia=self.__data_proximo_dia,
             data_sap_atribuicao=self.__data_sap_atribuicao,
-            rotina=input("Letra da Rotina: ")
+            rotina=rotinas[0]
             #rotina=rotinas["primeira"]
         )
-        # self._SAP_OP(
-        #     lista_empresas=lista,
-        #     data_sap=self.__data_sap,
-        #     data_atual_maisdois_sap=self.__data_atual_maisdois_sap,
-        #     data_sap_atribuicao=self.__data_sap_atribuicao2,
-        #     rotina=rotinas["segunda"]
-        # )
+        self._SAP_OP(
+            lista_empresas=lista,
+            data_sap=self.__data_sap,
+            data_proximo_dia=self.__data_proximo_dia,
+            data_sap_atribuicao=self.__data_sap_atribuicao2,
+            rotina=rotinas[1]
+        )
 
+
+    #realiza as rotinas no SAP
     def _SAP_OP(
             self,
             lista_empresas: list,
@@ -212,7 +320,7 @@ class F110:
                 CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
 
                 self.session.findById(CAMPOS_F110[1]).text = data_sap # Data de Execução *** Modificar ***
-                self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação #### RENAN ALTERAR
+                self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação 
 
                 CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4])
 
@@ -224,14 +332,20 @@ class F110:
                 CAMPOS_F110_PARAMETRO = self.buscar_campo(CAMPOS_F110_PARAMETRO[0])
                 CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO = self.buscar_campo(CAMPOS_F110_PARAMETRO[7])
 
-                try:
-                    self.session.findById(CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO[0]).text = empresa # Empresa
-                except:
-                    raise Exception(f"o codigo '{rotina}' já foi utilizado para esta empresa")
-                    #continue
+                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
+                    if "[0,0]" in child_object.Id:
+                        try:
+                            self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = empresa
+                        except:
+                            raise Exception(f"o codigo '{rotina}' já foi utilizado para esta empresa")
 
-                self.session.findById(CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO[4]).text = "BMTU" # Meio de Pgto
-                self.session.findById(CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO[8]).text = data_proximo_dia #Data do dia seguinte a programação de PGTO *** Modificar ***
+                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
+                    if "[1,0]" in child_object.Id:
+                        self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = "BMTU"
+
+                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
+                    if "[2,0]" in child_object.Id:
+                        self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = data_proximo_dia
 
                 CAMPOS_F110_PARAMETRO_CONTAS = self.buscar_campo(CAMPOS_F110_PARAMETRO[9])
 
@@ -239,8 +353,8 @@ class F110:
                 self.session.findById(CAMPOS_F110_PARAMETRO_CONTAS[6]).text = "*" #Cliente
                 self.session.findById(CAMPOS_F110_ABAS[2]).select()
 
-                if "A data de lançamento situa-se no passado.".lower() == self.session.findById("wnd[0]/sbar").Text.lower():
-                    raise Exception("A data de lançamento situa-se no passado.")
+                if (texto_aviso:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
+                    raise Exception(texto_aviso)
 
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_ABAS[2])
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_SELECAO[0])
@@ -290,17 +404,19 @@ class F110:
                 self.session.findById("wnd[0]/tbar[0]/btn[3]").press ()
                 self.session.findById("wnd[0]/tbar[1]/btn[13]").press ()
 
-                for child_object in self.session.findById("wnd[1]/usr/").Children:
-                    nome: str = child_object.Text
-                    if "Exec.imeditamente".lower() in nome.lower():
-                        caminho = child_object.Id.replace("/app/con[0]/ses[0]/", "")
-                        self.session.findById(caminho).selected = "true"
-                self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
-
                 try:
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    for child_object in self.session.findById("wnd[1]/usr/").Children:
+                        nome: str = child_object.Text
+                        if "Exec.imeditamente".lower() in nome.lower():
+                            caminho = child_object.Id.replace("/app/con[0]/ses[0]/", "")
+                            self.session.findById(caminho).selected = "true"
+                            self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
                 except:
-                    pass
+                    CAMPOS_ADVERTENCIA = self.buscar_campo("wnd[2]/usr/")
+                    if (texto_advertencia:=self.session.findById(CAMPOS_ADVERTENCIA[1]).Text.lower()) != "":
+                        self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                        raise Exception(texto_advertencia)
+                        #print(f"               {texto_advertencia} {empresa + rotina}")
 
                 CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
                 CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4])
@@ -310,6 +426,18 @@ class F110:
 
                 for x in range(80):
                     if self.verificar_status(CAMPOS_F110_STATUS):
+                        break
+                    self.session.findById("wnd[0]").sendVKey(14)
+                    sleep(1)
+
+                self.session.findById("wnd[0]/tbar[1]/btn[7]").press()
+
+                CAMPOS_PLANEJAR_PAGAMENTO = self.buscar_campo("wnd[1]/usr/")
+                self.session.findById(CAMPOS_PLANEJAR_PAGAMENTO[7]).selected = "true"
+                self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+
+                for x in range(80):
+                    if self.verificar_status(CAMPOS_F110_STATUS, texto_verificar="Programa de pagamento foi executado"):
                         break
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
@@ -349,19 +477,24 @@ class F110:
         self.session.findById(CAMPOS_FBL1N[9]).setFocus() # clica no campo 'até' depois do campo Empresa 
         self.session.findById("wnd[0]").sendVKey(4) # abre o MatCode
 
-        cont = 10
-        while True: # vai rolando o scroll do do matcode até a quantidade de endereços seja menor que 124 e salva em uma Constante chamada ULTIMA_EMPRESA a quantidade exibida na tela
-            self.session.findById("wnd[1]/usr").verticalScrollbar.position = cont
-            if (ULTIMA_EMPRESA:=len(self.buscar_campo("wnd[1]/usr/"))) < 124:
-                break
-            cont += 25
+        # cont = 10
+        # while True: # vai rolando o scroll do do matcode até a quantidade de endereços seja menor que 124 e salva em uma Constante chamada ULTIMA_EMPRESA a quantidade exibida na tela
+        #     self.session.findById("wnd[1]/usr").verticalScrollbar.position = cont
+        #     if (ULTIMA_EMPRESA:=len(self.buscar_campo("wnd[1]/usr/"))) < 124:
+        #         print(ULTIMA_EMPRESA)
+        #         break
+        #     print(ULTIMA_EMPRESA)
+        #     cont += 25
+        #     sleep(1)
+        self.session.findById("wnd[1]/usr").verticalScrollbar.position = 78
+        ULTIMA_EMPRESA = len(self.buscar_campo("wnd[1]/usr/"))
 
         self.session.findById(CAMPO_EMPRESA[ULTIMA_EMPRESA-1]).caretPosition = 1 # clica na ultima empresa se baseando na constante 'ULTIMA_EMPRESA' e subtrai 1 do valor para selecionar a ultima empresa exibida
         self.session.findById("wnd[1]").sendVKey(2) # aperta ENTER
 
         self.session.findById(CAMPOS_FBL1N[22]).text = "" # limpa a data do campo 'Aberto á data fixada'
 
-        self.session.findById(CAMPOS_FBL1N[44]).text = self.__data_proximo_dia # preenche o valor do dia seguinte no campo 'Vencimento líquido'
+        self.session.findById(CAMPOS_FBL1N[44]).text = self.__data_sap # preenche o valor do dia seguinte no campo 'Vencimento líquido'
 
         self.session.findById(CAMPOS_FBL1N[50]).text = "/PATRIMAR" # escreve o nome do layout no campo Layout
 
@@ -397,9 +530,11 @@ if __name__ == "__main__":
     try:
         log_error: LogError = LogError()
         
-        bot: F110 = F110(int(input("dia: ")))
+        bot: F110 = F110(int(input("dias: ")))
         bot.mostrar_datas()
+
         bot.iniciar()
     except Exception as error:
         print(traceback.format_exc())
-        input()
+    
+    input()
