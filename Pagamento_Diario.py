@@ -95,6 +95,7 @@ class Rotinas:
     
     def proxima_rotina(self) -> list:
         data = self.__data.strftime("%d/%m/%Y")
+        print(data)
         rotinas: list = []
         #online
         if os.path.exists(self.__caminho_servidor):
@@ -319,6 +320,7 @@ class F110:
 
                 CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
 
+
                 self.session.findById(CAMPOS_F110[1]).text = data_sap # Data de Execução *** Modificar ***
                 self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação 
 
@@ -327,25 +329,33 @@ class F110:
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
 
+                if (texto_aviso1:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
+                    print(f"    Aviso: {empresa+rotina} == {texto_aviso1}")
+                    #raise Exception(texto_aviso1)
 
+                
                 CAMPOS_F110_PARAMETRO = self.buscar_campo(CAMPOS_F110_ABAS[1])
                 CAMPOS_F110_PARAMETRO = self.buscar_campo(CAMPOS_F110_PARAMETRO[0])
-                CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO = self.buscar_campo(CAMPOS_F110_PARAMETRO[7])
+                
+                try:
+                    CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO = self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssub/1/2/tblSAPF110VCTRL_FKTTAB/").Children
+                except:
+                    CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO = self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children
 
-                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
+                for child_object in CAMPOS_F110_PARAMETRO_CONTROLE_PAGAMENTO:
                     if "[0,0]" in child_object.Id:
                         try:
                             self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = empresa
                         except:
                             raise Exception(f"o codigo '{rotina}' já foi utilizado para esta empresa")
-
-                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
-                    if "[1,0]" in child_object.Id:
+                        
+                    elif "[1,0]" in child_object.Id:
                         self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = "BMTU"
-
-                for child_object in self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPAR/ssubSUBSCREEN_BODY:SAPF110V:0202/tblSAPF110VCTRL_FKTTAB/").Children:
-                    if "[2,0]" in child_object.Id:
+                    
+                    elif "[2,0]" in child_object.Id:
                         self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = data_proximo_dia
+                    
+
 
                 CAMPOS_F110_PARAMETRO_CONTAS = self.buscar_campo(CAMPOS_F110_PARAMETRO[9])
 
@@ -353,8 +363,9 @@ class F110:
                 self.session.findById(CAMPOS_F110_PARAMETRO_CONTAS[6]).text = "*" #Cliente
                 self.session.findById(CAMPOS_F110_ABAS[2]).select()
 
-                if (texto_aviso:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    raise Exception(texto_aviso)
+                if (texto_aviso2:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
+                    print(f"    Aviso: {empresa+rotina} == {texto_aviso2}")
+                    #raise Exception(texto_aviso2)
 
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_ABAS[2])
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_SELECAO[0])
@@ -380,6 +391,10 @@ class F110:
 
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
+                if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
+                    print(f"    Aviso: {empresa+rotina} == {texto_aviso3}")
+                    #raise Exception(texto_aviso3)
+
                 CAMPOS_F110_LOG = self.buscar_campo(CAMPOS_F110_ABAS[3])
                 CAMPOS_F110_LOG = self.buscar_campo(CAMPOS_F110_LOG[0])
 
@@ -393,6 +408,10 @@ class F110:
                 self.session.findById(CAMPOS_F110_LOG_CONTAS[2]).text = "*"
 
                 self.session.findById(CAMPOS_F110_ABAS[4]).select()
+
+                if (texto_aviso4:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
+                    print(f"    Aviso: {empresa+rotina} == {texto_aviso4}")
+                    #raise Exception(texto_aviso4)
 
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_IMPRESS[0])
@@ -465,6 +484,9 @@ class F110:
             pass
 
         CAMPOS_FBL1N: list = [x.Id.replace("/app/con[0]/ses[0]/", "") for x in self.session.findById("wnd[0]/usr/").Children] # gera uma lista com todos os endereços dentro da transação
+
+        self.session.findById(CAMPOS_FBL1N[2]).text = ""
+        self.session.findById(CAMPOS_FBL1N[4]).text = ""
 
         self.session.findById(CAMPOS_FBL1N[7]).setFocus() # clica no campo da Empresa
         self.session.findById("wnd[0]").sendVKey(4) # abre o matcode
