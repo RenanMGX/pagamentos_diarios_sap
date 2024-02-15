@@ -50,6 +50,8 @@ class F110:
         self.nome_arquivo = f"Relatorio_SAP_{datetime.now().strftime('%d%m%Y%H%M%S')}.xlsx"
 
     def mostrar_datas(self):
+        """mostra todas as datas que serão preenchidas pelo programa
+        """
         print(f"\n{'-'*20}Datas{'-'*20}")
         print(f"self.__data_sap : '{self.__data_sap}'")
         print(f"self.__data_sap_atribuicao : '{self.__data_sap_atribuicao}'")
@@ -60,12 +62,12 @@ class F110:
         #     raise Warning(f"está data não é permitida '{self.__data_sap}'")
 
     def _verificar_conexao(self) -> bool:
-        '''
-        verifica se o sap está aberto e salva a conexão nas instancias
-        Return:
-        True: caso consiga realizar a conexão
-        False: caso não consiga realizar a Conexão
-        '''
+        """verifica se o sap está aberto e salva a conexão nas instancias
+
+        Returns:
+            bool: True: caso consiga realizar a conexão
+                  False: caso não consiga realizar a Conexão
+        """
         try:
             self.SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")
             self.application: win32com.client.CDispatch = self.SapGuiAuto.GetScriptingEngine
@@ -78,9 +80,8 @@ class F110:
             return False
     
     def _limpar_cache_sap(self) -> None:
-        '''
-        limpa todas as instancias de conexão com o SAP
-        '''
+        """limpa todas as instancias de conexão com o SAP
+        """
         try:
             del self.SapGuiAuto
             del self.application
@@ -90,12 +91,11 @@ class F110:
             pass
 
     def _conectar(self) -> bool:
-        '''
-        realiza verificação de conexão com o SAP
-        Return:
-        True: conectado
-        False: não conectado
-        '''
+        """realiza verificação de conexão com o SAP
+
+        Returns:
+            bool: True: conectado; False: não conectado
+        """
         if self._verificar_conexao() == False:
             self._limpar_cache_sap()
             print("não foi possivel se conectar ao SAP\n")
@@ -113,13 +113,30 @@ class F110:
         except:
             pass
 
-    def verificar_status(self, campo, texto_verificar="Proposta de pagamento criada"):
+    def verificar_status(self, campo:str, texto_verificar:str="Proposta de pagamento criada") -> bool:
+        """Verifica se o campo informado está retornando a string informada
+
+        Args:
+            campo (str): endereço do campo
+            texto_verificar (str, optional): texto a ser verificado no campo. Defaults to "Proposta de pagamento criada".
+
+        Returns:
+            bool: Retorna True caso encontre ou False caso não encontre
+        """
         for status in campo:
             if texto_verificar.lower() in  self.session.findById(status).Text.lower():
                 return True
         return False
 
     def buscar_campo(self, campo: str) -> list:
+        """busca o campo e retorna uma lista dos endereços encontrados
+
+        Args:
+            campo (str): endereço a ser procurado
+
+        Returns:
+            list: lista de endereços encontrados
+        """
         #print(f"Buscar: {campo}")
         lista: list = []
         for child_object in self.session.findById(campo).Children:
