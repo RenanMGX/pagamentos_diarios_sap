@@ -61,7 +61,7 @@ class Rotinas:
         else:
             if os.path.exists(self.__caminho_local + self.__arquivo): 
                 print("carregando arquivo Offline:")
-                retorno = [x for x in json.load(_file) if x['data'] == self.__data.strftime("%d/%m/%Y")]
+                retorno = [x for x in json.load(_file) if x['data'] == self.__data.strftime("%d/%m/%Y")] #type: ignore
                 return retorno[0]
         
         return {}

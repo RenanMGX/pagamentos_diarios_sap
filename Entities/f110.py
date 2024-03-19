@@ -333,7 +333,7 @@ class F110:
                 CAMPOS_F110_STATUS = self.buscar_campo(CAMPOS_F110_STATUS[1])
 
                 for x in range(80):
-                    if self.verificar_status(CAMPOS_F110_STATUS):
+                    if self.verificar_status(str(CAMPOS_F110_STATUS)):
                         break
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
@@ -345,7 +345,7 @@ class F110:
                 self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
 
                 for x in range(80):
-                    if self.verificar_status(CAMPOS_F110_STATUS, texto_verificar="Programa de pagamento foi executado"):
+                    if self.verificar_status(str(CAMPOS_F110_STATUS), texto_verificar="Programa de pagamento foi executado"):
                         break
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
@@ -447,7 +447,7 @@ class F110:
 if __name__ == "__main__":
     register_erro: LogError = LogError()
     try:
-        bot: F110 = F110(int(input("dias: ")))
+        bot: F110 = F110(int(input("dias: "))) #type: ignore
         bot.mostrar_datas()
         bot.iniciar()
     except Exception as error:

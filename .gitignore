@@ -1,5 +1,10 @@
 *.TEMP
 *log_error.csv
+*SAP.json
+*.vscode
+*~$Datas_Execução.xlsx
+*arquivos_para_preparar
+*montagem_dos_dados_temp.ipynb
 
 
 

@@ -20,17 +20,17 @@ class Ui_Dialog(object):
         font.setKerning(True)
 
         Dialog.setFont(font)
-        Dialog.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+        Dialog.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)#type: ignore
         Dialog.setAccessibleDescription("")
-        Dialog.setLayoutDirection(QtCore.Qt.LeftToRight)
-        Dialog.setInputMethodHints(QtCore.Qt.ImhNone)
+        Dialog.setLayoutDirection(QtCore.Qt.LeftToRight)#type: ignore
+        Dialog.setInputMethodHints(QtCore.Qt.ImhNone)#type: ignore
         Dialog.setSizeGripEnabled(False)
         Dialog.setModal(False)
 
         self.w_calendario = QtWidgets.QCalendarWidget(Dialog)
-        self.w_calendario.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.w_calendario.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))#type: ignore
         self.w_calendario.setGeometry(QtCore.QRect(40, 10, 312, 183))
-        self.w_calendario.setInputMethodHints(QtCore.Qt.ImhNone)
+        self.w_calendario.setInputMethodHints(QtCore.Qt.ImhNone)#type: ignore
         self.w_calendario.setGridVisible(False)
         self.w_calendario.setVerticalHeaderFormat(QtWidgets.QCalendarWidget.NoVerticalHeader)
         self.w_calendario.setNavigationBarVisible(True)
@@ -52,7 +52,7 @@ class Ui_Dialog(object):
 
     def retornar_data(self):
         calendar_date = self.w_calendario.selectedDate()
-        date.date = datetime(calendar_date.year(), calendar_date.month(), calendar_date.day())
+        date.date = datetime(calendar_date.year(), calendar_date.month(), calendar_date.day())#type: ignore
         Dialog.close()
 
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     try:
         if date.date == 0:
             raise Exception("data invalida")
-        bot: F110 = F110(date.date)
+        bot: F110 = F110(date.date)#type: ignore
         bot.mostrar_datas()
         bot.iniciar()
         print("\nScript Finalizado com exito!")
