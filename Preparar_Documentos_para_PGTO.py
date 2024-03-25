@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from typing import Dict
 from time import sleep
 from Entities.crenciais import Credential
+from getpass import getuser
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str) -> None:
@@ -40,13 +41,10 @@ class Preparar:
         if not os.path.exists(self.path_files):
             os.makedirs(self.path_files)
         
-        
         self.__fornecedores_c_debitos_excel:str = "fornecedores_com_debitos.xlsx"
         self.__fornecedores_c_debitos_txt:str = "lista_fornecedores_c_debitos.txt"
         self.__fornecedores_pgto_T_excel:str = "Lista de Fornecedores.xlsx"
         self.__fornecedores_pgto_T_txt:str = "lista_fornecedores_pgto_T.txt"
-        
-        
         
     @property
     def path_files(self):
@@ -306,7 +304,6 @@ class Preparar:
                     print(f"          Error! {type(error)} -> {error}")
                     print(traceback.format_exc())
         sleep(5) 
-                    
             
     def fechar_sap(self):
         try:
@@ -343,12 +340,12 @@ class Preparar:
 if __name__ == "__main__":
     crd:dict = Credential("creden/SAP").load()
     
-    bot = Preparar(date=datetime.now(), arquivo_datas="files/Datas_Execução.xlsx")
+    bot = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
     
     bot.conectar_sap(user=crd['user'], password=crd['password'])
-    #bot.primeiro_extrair_fornecedores_fbl1n()
-    #bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T="files")
-    #bot.terceiro_preparar_documentos_tipo_t()
+    bot.primeiro_extrair_fornecedores_fbl1n()
+    bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
+    bot.terceiro_preparar_documentos_tipo_t()
     bot.quarto_preparar_documentos_tipo_b()
     
     
