@@ -26,19 +26,6 @@ class F110:
         dia_execao (int):  Qtd de dias para a execução: 0 = hoje; 1 = amanhâ; 2 = em 2 dias e assim por diante...
         '''
         self.log_error: LogError = LogError()
-        # if dia_execucao < 0:
-        #     raise ValueError("proibido valores negativos")
-        # if isinstance(dia_execucao, float):
-        #     dia_execucao = dia_execucao
-        # elif not isinstance(dia_execucao, int):
-        #     raise TypeError("no parametro 'dia_execucao' apenas valores do tipo (int)")
-        
-        # #Definir Datas
-        # self.__data_atual: datetime = (agora:=datetime.now()) + relativedelta(days=dia_execucao)
-        # self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
-        # self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
-        # self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
-        # self.__data_proximo_dia: str = (agora + relativedelta(days=(dia_execucao + 1))).strftime('%d.%m.%Y') # Data do dia seguinte a programação de PGTO 
 
         self.__data_atual: datetime = dia_execucao
         self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
@@ -379,32 +366,6 @@ class F110:
 
         self.session.findById(CAMPOS_FBL1N[7]).text = "*" # clica no campo da Empresa
 
-        # self.session.findById(CAMPOS_FBL1N[7]).setFocus() # clica no campo da Empresa
-        # self.session.findById("wnd[0]").sendVKey(4) # abre o matcode
-
-        # CAMPO_EMPRESA: list = self.buscar_campo("wnd[1]/usr/") # faz uma busca dentro do Matcode e retorna uma lista do endereços dos itens encontrados
-
-        # self.session.findById(CAMPO_EMPRESA[4]).caretPosition = 1 # seleciona a primeira empresa
-        # self.session.findById("wnd[1]").sendVKey(2) # aperta ENTER
-
-        # self.session.findById(CAMPOS_FBL1N[9]).setFocus() # clica no campo 'até' depois do campo Empresa 
-        # self.session.findById("wnd[0]").sendVKey(4) # abre o MatCode
-
-        # # cont = 10
-        # # while True: # vai rolando o scroll do do matcode até a quantidade de endereços seja menor que 124 e salva em uma Constante chamada ULTIMA_EMPRESA a quantidade exibida na tela
-        # #     self.session.findById("wnd[1]/usr").verticalScrollbar.position = cont
-        # #     if (ULTIMA_EMPRESA:=len(self.buscar_campo("wnd[1]/usr/"))) < 124:
-        # #         print(ULTIMA_EMPRESA)
-        # #         break
-        # #     print(ULTIMA_EMPRESA)
-        # #     cont += 25
-        # #     sleep(1)
-        # self.session.findById("wnd[1]/usr").verticalScrollbar.position = 78
-        # ULTIMA_EMPRESA = len(self.buscar_campo("wnd[1]/usr/"))
-
-        # self.session.findById(CAMPO_EMPRESA[ULTIMA_EMPRESA-1]).caretPosition = 1 # clica na ultima empresa se baseando na constante 'ULTIMA_EMPRESA' e subtrai 1 do valor para selecionar a ultima empresa exibida
-        # self.session.findById("wnd[1]").sendVKey(2) # aperta ENTER
-
         self.session.findById(CAMPOS_FBL1N[22]).text = "" # limpa a data do campo 'Aberto á data fixada'
 
         try:
@@ -426,6 +387,9 @@ class F110:
                 return False
         except:
             pass
+        
+        if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+            raise Exception(error)
         
         ####### aba dos relatorios
         self.session.findById("wnd[0]").sendVKey(16) # abre a aba para gerar o arquivo excel
@@ -452,6 +416,7 @@ if __name__ == "__main__":
         bot.iniciar()
     except Exception as error:
         print(f"{type(error)} -> {error}")
-        register_erro.register(tipo=type(error), descri=str(error), trace=traceback.format_exc())
+        error_format:str = traceback.format_exc().replace("\n", "|||")
+        register_erro.register(tipo=type(error), descri=str(error), trace=error_format)
     
     input()

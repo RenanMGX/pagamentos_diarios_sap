@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import psutil
 import subprocess
-import xlwings as xw
+import xlwings as xw #type: ignore
 import traceback
 
 from datetime import datetime
@@ -14,30 +14,34 @@ from Entities.crenciais import Credential
 from getpass import getuser
 
 class Preparar:
-    def __init__(self, *, date:datetime, arquivo_datas:str) -> None:
+    def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
         if not isinstance(date, datetime):
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
         
-        dias_execucao:Dict[str,datetime] = {
+        self.empresas:list = ["*"]
+        self.__em_massa:bool = em_massa
+        
+        dias_execucao: Dict[str,datetime] = {
             "dia_1" : now,
             "dia_2" : now + relativedelta(days=1),
             "dia_3" : now + relativedelta(days=2),
             "dia_4" : now + relativedelta(days=3),
             "dia_5" : now + relativedelta(days=4),
             "dia_6" : now + relativedelta(days=5),
-            "dia_7" : now + relativedelta(days=6)
+            "dia_7" : now + relativedelta(days=6),
+            "dia_8" : now + relativedelta(days=7)
         }
         
         if not os.path.exists(arquivo_datas):
             raise FileNotFoundError(f"{arquivo_datas=} não foi encontrado!")
         if not arquivo_datas.endswith("xlsx"):
             raise Exception(f"{arquivo_datas=} apenas arquivos xlsx")
-        self.__arquivo_datas:pd.DataFrame = pd.read_excel(arquivo_datas)
+        self.__arquivo_datas: pd.DataFrame = pd.read_excel(arquivo_datas)
         
-        self.__datas:dict = self.montar_datas(dias_execucao)
+        self.__datas: dict = self.montar_datas(dias_execucao)
         
-        self.__path_files:str = os.getcwd() + "\\arquivos_para_preparar\\"
+        self.__path_files: str = os.getcwd() + "\\arquivos_para_preparar\\"
         if not os.path.exists(self.path_files):
             os.makedirs(self.path_files)
         
@@ -81,7 +85,7 @@ class Preparar:
     def montar_datas(self, datas_execucao:Dict[str,datetime]) -> dict:
         datas_para_retorno:dict = {}
         
-        datas_nao_permitidas = self.__arquivo_datas['Data'].astype(str).tolist()
+        datas_nao_permitidas:list = self.__arquivo_datas['Data'].astype(str).tolist()
         
         for key,value in datas_execucao.items():
             if not value.strftime('%Y-%m-%d') in datas_nao_permitidas:
@@ -98,7 +102,7 @@ class Preparar:
         
         return datas_para_retorno
     
-    def conectar_sap(self, *, user, password) -> bool:
+    def conectar_sap(self, *, user:str, password:str) -> bool:
         try:
             if not self._verificar_sap_aberto():
                 print("abrindo programa SAP")
@@ -108,7 +112,7 @@ class Preparar:
             print("conectando ao SAP")
             SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
             application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
-            connection = application.OpenConnection("S4P", True) # type: ignore
+            connection: win32com.client.CDispatch = application.OpenConnection("S4P", True) # type: ignore
             self.__session: win32com.client.CDispatch = connection.Children(0)# type: ignore
             
             print("digitando credenciais")
@@ -128,38 +132,48 @@ class Preparar:
         except AttributeError:
             raise Exception("o sap precisa ser conectado primeiro!")
         
-        print("Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO.")
-        #self.session.findById("wnd[0]").maximize ()
-        self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
-        self.session.findById("wnd[0]").sendVKey(0)
-        self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
-        self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
-        self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press ()
-        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "N0*" #Empresa
-        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = "P0*" #Empresa
-        self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
-        self.session.findById("wnd[0]/usr/radX_OPSEL").select()
-        self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
-        self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
-        self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"
-        self.session.findById("wnd[0]/usr/chkX_APAR").selected = "true"
-        self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = "" # Entrada Data Partidas em Aberto
-        #session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = data_sap # Data Inicial de Vencimento
-        #session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = data_sap # Data Final de Vencimento
-        self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "/EMP_C_DEBIT" # Layout
-        self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
-        
-        for file in os.listdir(self.path_files):
-            if file == self.fornecedores_c_debitos_excel:
-                os.unlink(self.path_files + file)
+        try:
+            print("Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO.")
+            #self.session.findById("wnd[0]").maximize ()
+            self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
+            self.session.findById("wnd[0]").sendVKey(0)
+            self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
+            self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
+            self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press ()
+            for empresa in self.empresas:
+                self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+            #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = self.empresas[1] #Empresa
+            self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+            self.session.findById("wnd[0]/usr/radX_OPSEL").select()
+            self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
+            self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
+            self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"
+            self.session.findById("wnd[0]/usr/chkX_APAR").selected = "true"
+            self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = "" # Entrada Data Partidas em Aberto
+            #session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = data_sap # Data Inicial de Vencimento
+            #session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = data_sap # Data Final de Vencimento
+            self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "EMP_C_DEBIT" # Layout
+            self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+            
+            #import pdb; pdb.set_trace()
+            
+            for file in os.listdir(self.path_files):
+                if file == self.fornecedores_c_debitos_excel:
+                    os.unlink(self.path_files + file)
+            
+            if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+                raise Exception(error)
 
-        self.session.findById("wnd[0]").sendVKey(16)
-        self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
-        self.session.findById("wnd[1]/usr/ctxtDY_PATH").text = self.path_files
-        self.session.findById("wnd[1]/usr/ctxtDY_FILENAME").text = self.fornecedores_c_debitos_excel
-        self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
-        
-        self._fechar_excel(file_name=self.fornecedores_c_debitos_excel)
+            self.session.findById("wnd[0]").sendVKey(16)
+            self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+            self.session.findById("wnd[1]/usr/ctxtDY_PATH").text = self.path_files
+            self.session.findById("wnd[1]/usr/ctxtDY_FILENAME").text = self.fornecedores_c_debitos_excel
+            self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+            
+            self._fechar_excel(file_name=self.fornecedores_c_debitos_excel)
+        except Exception as error:
+            self.fechar_sap()
+            raise Exception(error)
         
     def segundo_preparar_documentos(self, *,caminho_fornecedores_pgto_T:str) -> None:
         print("\nPreparando Documentos\n")
@@ -205,10 +219,10 @@ class Preparar:
                     self.session.findById("wnd[2]/usr/ctxtDY_PATH").caretPosition = 154
                     self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
-
                     self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "N0*" #Empresa
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = "P0*" #Empresa
+                    for empresa in self.empresas:
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = self.empresas[1] #Empresa
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
@@ -218,8 +232,9 @@ class Preparar:
                     self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
-                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "/Tranfer" # Layout
+                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "TRANSFER" # Layout
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+                    
                     
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
                         print(f"          {aviso_text}")
@@ -234,13 +249,19 @@ class Preparar:
                     if passar:
                         continue
                     
+                    if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+                        raise Exception(error)
+                    
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press() # Modificação em massa
                     sleep(1)
                     self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao'] # Alterar Atribuição para pgto
                     
-                    self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
-                    #session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
+                    if self.__em_massa:
+                        self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
+                    else:
+                        self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
+                        
                     print("          Concluido!")
                     
                 except Exception as error:
@@ -265,8 +286,9 @@ class Preparar:
                     self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
                     self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
                     self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press ()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "N0*" #Empresa
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = "P0*" #Empresa
+                    for empresa in self.empresas:
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = self.empresas[1] #Empresa
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press ()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select ()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
@@ -276,7 +298,7 @@ class Preparar:
                     self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
-                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "/Boletos" # Layout
+                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "Boletos" # Layout
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press ()
                 
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
@@ -291,13 +313,19 @@ class Preparar:
                             passar = True
                     if passar:
                         continue
+                    
+                    if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+                        raise Exception(error)
                 
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press () # Modificação em massa
                     self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao']  # Alterar Atribuição para pgto
                     
-                    self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
-                    #session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
+                    if self.__em_massa:
+                        self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
+                    else:
+                        self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
+                        
                     print("          Concluido!")
                     
                 except Exception as error:
@@ -320,7 +348,7 @@ class Preparar:
         except Exception as error:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
     
-    def _fechar_excel(self, *, file_name:str, timeout=15) -> None:
+    def _fechar_excel(self, *, file_name:str, timeout:int=15) -> None:
         for _ in range(timeout):
             for app in xw.apps:
                 for open_file in app.books:
@@ -340,7 +368,7 @@ class Preparar:
 if __name__ == "__main__":
     crd:dict = Credential("creden/SAP").load()
     
-    bot = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
+    bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx", em_massa=False)
     
     bot.conectar_sap(user=crd['user'], password=crd['password'])
     bot.primeiro_extrair_fornecedores_fbl1n()
@@ -348,8 +376,4 @@ if __name__ == "__main__":
     bot.terceiro_preparar_documentos_tipo_t()
     bot.quarto_preparar_documentos_tipo_b()
     
-    
     bot.fechar_sap()
-    
-    
-    
