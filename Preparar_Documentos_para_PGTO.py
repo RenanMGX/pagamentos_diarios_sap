@@ -19,7 +19,7 @@ class Preparar:
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
         
-        self.empresas:list = ["*"]
+        self.empresas:list = ["P031"]
         self.__em_massa:bool = em_massa
         
         dias_execucao: Dict[str,datetime] = {
@@ -93,12 +93,12 @@ class Preparar:
                     datas_para_retorno[key] = {
                         "data_atual" : value,
                         "data_sap" : value.strftime('%d.%m.%Y'),
-                        "data_sap_atribuicao" : value.strftime('%d.%m.%YR')
+                        "data_sap_atribuicao" : value.strftime('%d.%m.%Y R')
                     }
                 else:
-                    print(f"{value=}: final de semana")
+                    print(f"{value.strftime('%d.%m.%Y')=}: final de semana")
             else:
-                print(f"{value=}: data não permitida")
+                print(f"{value.strftime('%d.%m.%Y')=}: data não permitida")
         
         return datas_para_retorno
     
@@ -368,7 +368,7 @@ class Preparar:
 if __name__ == "__main__":
     crd:dict = Credential("creden/SAP").load()
     
-    bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx", em_massa=False)
+    bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
     
     bot.conectar_sap(user=crd['user'], password=crd['password'])
     bot.primeiro_extrair_fornecedores_fbl1n()
