@@ -170,9 +170,14 @@ class Preparar:
             if passar:
                 raise Exception("Lista não contém dados")
             
+            
             for file in os.listdir(self.path_files):
                 if file == self.fornecedores_c_debitos_excel:
-                    os.unlink(self.path_files + file)
+                    try:
+                        os.unlink(self.path_files + file)
+                    except PermissionError:
+                        self._fechar_excel(file_name=file)
+                        os.unlink(self.path_files + file)
                     
             
             if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
