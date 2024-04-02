@@ -385,14 +385,23 @@ class Preparar:
         return False    
         
 if __name__ == "__main__":
-    crd:dict = Credential("creden/SAP").load()
-    
-    bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
-    
-    bot.conectar_sap(user=crd['user'], password=crd['password'])
-    bot.primeiro_extrair_fornecedores_fbl1n()
-    bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
-    bot.terceiro_preparar_documentos_tipo_t()
-    bot.quarto_preparar_documentos_tipo_b()
-    
-    bot.fechar_sap()
+    try:
+        crd:dict = Credential("creden/SAP").load()
+        
+        bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
+        
+        bot.conectar_sap(user=crd['user'], password=crd['password'])
+        bot.primeiro_extrair_fornecedores_fbl1n()
+        bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
+        bot.terceiro_preparar_documentos_tipo_t()
+        bot.quarto_preparar_documentos_tipo_b()
+        
+        bot.fechar_sap()
+    except:
+        path = "logs\\"
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+        
+        file = f"{path}log_error_{datetime.now().strftime('%d%m%Y%H%M%S')}"
+        with open(file, 'w', encoding='utf-8')as _file:
+            _file.write(str(traceback.format_exc()))
