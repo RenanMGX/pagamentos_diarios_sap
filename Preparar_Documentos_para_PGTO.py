@@ -19,7 +19,7 @@ class Preparar:
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
         
-        self.empresas:list = ["P031"]
+        self.empresas:list = ["*"]
         self.__em_massa:bool = em_massa
         
         dias_execucao: Dict[str,datetime] = {
@@ -157,9 +157,23 @@ class Preparar:
             
             #import pdb; pdb.set_trace()
             
+            if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
+                print(f"          {aviso_text}")
+                raise Exception(aviso_text)
+                    
+            #import pdb; pdb.set_trace()
+            passar:bool = False
+            for child_object in self.session.findById("wnd[0]/usr/").Children:
+                if child_object.Text == 'Lista não contém dados':
+                    print(f"          {child_object.Text}")
+                    passar = True
+            if passar:
+                raise Exception("Lista não contém dados")
+            
             for file in os.listdir(self.path_files):
                 if file == self.fornecedores_c_debitos_excel:
                     os.unlink(self.path_files + file)
+                    
             
             if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
                 raise Exception(error)
