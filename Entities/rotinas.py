@@ -5,6 +5,14 @@ import shutil
 from datetime import datetime
 from getpass import getuser
 import pandas as pd
+import mysql.connector as mysql
+from dateutil.relativedelta import relativedelta
+from copy import deepcopy
+
+try:
+    from Entities.db_credencial import crd as db_crd
+except:
+    from db_credencial import crd as db_crd
 
 def verificarData(data: datetime, caminho: str) -> bool:
         data = data.replace(hour=0,minute=0,second=0,microsecond=0)
@@ -13,8 +21,6 @@ def verificarData(data: datetime, caminho: str) -> bool:
         if dicio[data].lower() == 'sim':
             return True
         return False
-    
-
 
 class Rotinas:
     def __init__(self, data) -> None:
@@ -122,8 +128,74 @@ class Rotinas:
 
             return self.__possiveis_rotinas[quantidade_rotinas_diaria]
 
-if __name__ == "__main__":
-    procurar_rotinas = Rotinas(datetime.now())
+class RotinasDB:
+    def __init__(self, date:datetime=datetime.now()) -> None:
+        self.__date:datetime = date
+        self.__crd:dict = db_crd
+        self.__rotinas_letras:list = [chr(101 + num) for num in range(22)]
+    
+    @property
+    def date(self):
+        return self.__date
+    
+    @property
+    def crd(self):
+        return self.__crd
+    
+    @property
+    def rotinas_letras(self):
+        return self.__rotinas_letras
+        
+    def load(self) -> list:
+        connection = mysql.connect(
+            host=self.crd['host'],
+            user=self.crd['user'],
+            password=self.crd['password'],
+            database=self.crd['database']
+        )
+        cursor = connection.cursor()
+        cursor.execute(f"SELECT rotina FROM rotinas WHERE date='{self.date.strftime('%Y-%m-%d')}'")
+        
+        letras:list = [letra[0].lower() for letra in cursor.fetchall()]#type: ignore
+                
+        connection.close()
+        
+        return letras
+    
+    def available(self, use_and_save:bool=False) -> str:
+        letras_disponiveis = deepcopy(self.rotinas_letras)
+        for letra in self.load():
+            try:
+                letras_disponiveis.pop(letras_disponiveis.index(letra))
+            except:
+                continue
+        
+        if len(letras_disponiveis) > 0:
+            if use_and_save:
+                self.save_utilized(letter=letras_disponiveis[-1])  
+            return letras_disponiveis[-1]
+        raise Exception("sem letras disponiveis")
+    
+    def save_utilized(self, *, letter) -> None:
+        connection = mysql.connect(
+            host=self.crd['host'],
+            user=self.crd['user'],
+            password=self.crd['password'],
+            database=self.crd['database']
+        )
+        cursor = connection.cursor()
+        cursor.execute(f"INSERT INTO rotinas(date, rotina) VALUES ('{self.date.strftime('%Y-%m-%d')}', '{letter}')")
+        connection.commit()
+        connection.close()
 
-    print(procurar_rotinas.ler())
-    print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
+if __name__ == "__main__":
+    # procurar_rotinas = Rotinas(datetime.now())
+
+    # print(procurar_rotinas.ler())
+    # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
+    bot = RotinasDB(date=datetime.now()-relativedelta(days=3))
+
+    letr = bot.available()
+    print(letr)
+    #bot.save_utilized(letter=letr)
+    

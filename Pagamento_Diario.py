@@ -14,7 +14,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setEnabled(True)
-        Dialog.resize(400, 300)
+        Dialog.resize(500, 400)
 
         font = QtGui.QFont()
         font.setKerning(True)
@@ -47,7 +47,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", f"Pagamentos Diarios - {version}"))
         self.bt_iniciar.setText(_translate("Dialog", "Iniciar"))
 
     def retornar_data(self):
@@ -57,9 +57,9 @@ class Ui_Dialog(object):
 
 
 if __name__ == "__main__":
-
     date = Date()
-
+    version = "v1.0"
+    
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
@@ -67,7 +67,6 @@ if __name__ == "__main__":
     Dialog.show()
     #sys.exit(app.exec_())
     app.exec_()
-
 
     register_erro: LogError = LogError()
     try:
@@ -81,5 +80,4 @@ if __name__ == "__main__":
         print("\nScript finalizado com o seguinte error")        
         print(f"{type(error)} -> {error}")
         register_erro.register(tipo=type(error), descri=str(error), trace=traceback.format_exc())
-    input()
-    
+    input("Digite algo para finalizar o Script: ")    

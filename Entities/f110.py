@@ -8,17 +8,14 @@ from time import sleep
 import xlwings as xw # type: ignore
 
 try:
-    from log_error import LogError
-except:
     from Entities.log_error import LogError
-
-try:
-    from rotinas import Rotinas, verificarData
 except:
-    from Entities.rotinas import Rotinas, verificarData
-
-
-
+    from log_error import LogError
+try:
+    from Entities.rotinas import Rotinas, verificarData, RotinasDB
+except:
+    from rotinas import Rotinas, verificarData, RotinasDB
+    
 class F110:
     def __init__(self, dia_execucao:datetime) -> None:
         '''
@@ -31,6 +28,8 @@ class F110:
         self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
         self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
         self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
+        self.__data_sap_atribuicao3: str = self.__data_atual.strftime('%d.%m.%Y O') # Valor da Atribuição com O
+        self.__data_sap_atribuicao4: str = self.__data_atual.strftime('%d.%m.%Y J') # Valor da Atribuição com O
         self.__data_proximo_dia: str = (self.__data_atual + relativedelta(days=1)).strftime('%d.%m.%Y') # Data do dia seguinte a programação de PGTO 
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
@@ -43,6 +42,8 @@ class F110:
         print(f"self.__data_sap : '{self.__data_sap}'")
         print(f"self.__data_sap_atribuicao : '{self.__data_sap_atribuicao}'")
         print(f"self.__data_sap_atribuicao2 : '{self.__data_sap_atribuicao2}'")
+        print(f"self.__data_sap_atribuicao3 : '{self.__data_sap_atribuicao3}'")
+        print(f"self.__data_sap_atribuicao4 : '{self.__data_sap_atribuicao4}'")
         print(f"self.__data_proximo_dia : '{self.__data_proximo_dia}'")
         print(f"{'-'*45}\n")
         # if not verificarData(self.__data_atual, caminho=".TEMP/Datas_Execução.xlsx"):
@@ -131,8 +132,9 @@ class F110:
         return lista
 
     def iniciar(self) -> None:
-        procurar_rotinas = Rotinas(self.__data_atual)
-
+        #procurar_rotinas = Rotinas(self.__data_atual)
+        rotinas_db = RotinasDB(self.__data_atual)
+        
         if not self._conectar():
             return
         
@@ -153,13 +155,13 @@ class F110:
 
         #lista: list = ['N000']
 
-        rotinas: list = procurar_rotinas.proxima_rotina()
+        #rotinas: list = procurar_rotinas.proxima_rotina()
         self._SAP_OP(
             lista_empresas=lista,
             data_sap=self.__data_sap,
             data_proximo_dia=self.__data_proximo_dia,
             data_sap_atribuicao=self.__data_sap_atribuicao,
-            rotina=rotinas[0]
+            rotina=rotinas_db.available(use_and_save=True)
             #rotina=rotinas["primeira"]
         )
 
@@ -168,7 +170,23 @@ class F110:
             data_sap=self.__data_sap,
             data_proximo_dia=self.__data_proximo_dia,
             data_sap_atribuicao=self.__data_sap_atribuicao2,
-            rotina=rotinas[1]
+            rotina=rotinas_db.available(use_and_save=True)
+        )
+        
+        self._SAP_OP(
+            lista_empresas=lista,
+            data_sap=self.__data_sap,
+            data_proximo_dia=self.__data_proximo_dia,
+            data_sap_atribuicao=self.__data_sap_atribuicao3,
+            rotina=rotinas_db.available(use_and_save=True)
+        )
+        
+        self._SAP_OP(
+            lista_empresas=lista,
+            data_sap=self.__data_sap,
+            data_proximo_dia=self.__data_proximo_dia,
+            data_sap_atribuicao=self.__data_sap_atribuicao4,
+            rotina=rotinas_db.available(use_and_save=True)
         )
 
 #realiza as rotinas no SAP
