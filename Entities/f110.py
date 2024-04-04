@@ -16,6 +16,11 @@ try:
 except:
     from rotinas import Rotinas, verificarData, RotinasDB
     
+try:
+    from Entities.process import Processos
+except:
+    from process import Processos
+    
 class F110:
     def __init__(self, dia_execucao:datetime) -> None:
         '''
@@ -39,12 +44,12 @@ class F110:
         """mostra todas as datas que serão preenchidas pelo programa
         """
         print(f"\n{'-'*20}Datas{'-'*20}")
-        print(f"self.__data_sap : '{self.__data_sap}'")
-        print(f"self.__data_sap_atribuicao : '{self.__data_sap_atribuicao}'")
-        print(f"self.__data_sap_atribuicao2 : '{self.__data_sap_atribuicao2}'")
-        print(f"self.__data_sap_atribuicao3 : '{self.__data_sap_atribuicao3}'")
-        print(f"self.__data_sap_atribuicao4 : '{self.__data_sap_atribuicao4}'")
-        print(f"self.__data_proximo_dia : '{self.__data_proximo_dia}'")
+        print(f"{self.__data_sap=}")
+        print(f"{self.__data_sap_atribuicao=}")
+        print(f"{self.__data_sap_atribuicao2=}")
+        print(f"{self.__data_sap_atribuicao3=}")
+        print(f"{self.__data_sap_atribuicao4=}")
+        print(f"{self.__data_proximo_dia=}")
         print(f"{'-'*45}\n")
         # if not verificarData(self.__data_atual, caminho=".TEMP/Datas_Execução.xlsx"):
         #     raise Warning(f"está data não é permitida '{self.__data_sap}'")
@@ -112,8 +117,11 @@ class F110:
             bool: Retorna True caso encontre ou False caso não encontre
         """
         for status in campo:
-            if texto_verificar.lower() in  self.session.findById(status).Text.lower():
-                return True
+            try:
+                if texto_verificar.lower() in  self.session.findById(status).Text.lower():
+                    return True
+            except:
+                return False
         return False
 
     def buscar_campo(self, campo: str) -> list:
@@ -131,7 +139,9 @@ class F110:
             lista.append(child_object.Id.replace("/app/con[0]/ses[0]/", ""))
         return lista
 
-    def iniciar(self) -> None:
+    def iniciar(self, processo:Processos) -> None:
+        if not isinstance(processo, Processos):
+            raise TypeError("apenas objeto do tipo Processos Permitido")
         #procurar_rotinas = Rotinas(self.__data_atual)
         rotinas_db = RotinasDB(self.__data_atual)
         
@@ -156,38 +166,47 @@ class F110:
         #lista: list = ['N000']
 
         #rotinas: list = procurar_rotinas.proxima_rotina()
-        self._SAP_OP(
-            lista_empresas=lista,
-            data_sap=self.__data_sap,
-            data_proximo_dia=self.__data_proximo_dia,
-            data_sap_atribuicao=self.__data_sap_atribuicao,
-            rotina=rotinas_db.available(use_and_save=True)
-            #rotina=rotinas["primeira"]
-        )
+        if processo.boleto:
+            self._SAP_OP(
+                lista_empresas=lista,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao,
+                rotina=rotinas_db.available(use_and_save=True),
+                pagamento = "BMTU"
+                #rotina=rotinas["primeira"]
+            )
 
-        self._SAP_OP(
-            lista_empresas=lista,
-            data_sap=self.__data_sap,
-            data_proximo_dia=self.__data_proximo_dia,
-            data_sap_atribuicao=self.__data_sap_atribuicao2,
-            rotina=rotinas_db.available(use_and_save=True)
-        )
+            self._SAP_OP(
+                lista_empresas=lista,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao2,
+                rotina=rotinas_db.available(use_and_save=True),
+                pagamento = "BMTU"
+            )
         
-        self._SAP_OP(
-            lista_empresas=lista,
-            data_sap=self.__data_sap,
-            data_proximo_dia=self.__data_proximo_dia,
-            data_sap_atribuicao=self.__data_sap_atribuicao3,
-            rotina=rotinas_db.available(use_and_save=True)
-        )
+        #pagamento O
+        if processo.consumo:
+            self._SAP_OP(
+                lista_empresas=lista,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao3,
+                rotina=rotinas_db.available(use_and_save=True),
+                pagamento="O"
+            )
         
-        self._SAP_OP(
-            lista_empresas=lista,
-            data_sap=self.__data_sap,
-            data_proximo_dia=self.__data_proximo_dia,
-            data_sap_atribuicao=self.__data_sap_atribuicao4,
-            rotina=rotinas_db.available(use_and_save=True)
-        )
+        #pagamento J
+        if processo.imposto:
+            self._SAP_OP(
+                lista_empresas=lista,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao4,
+                rotina=rotinas_db.available(use_and_save=True),
+                pagamento="J"
+            )
 
 #realiza as rotinas no SAP
     def _SAP_OP(
@@ -197,6 +216,7 @@ class F110:
             data_proximo_dia: str,
             data_sap_atribuicao: str,
             rotina: str,
+            pagamento:str = "BMTU"
     ) -> None:
         '''
         realiza as rotinas no SAP
@@ -244,7 +264,7 @@ class F110:
                             raise Exception(f"o codigo '{rotina}' já foi utilizado para esta empresa")
                         
                     elif "[1,0]" in child_object.Id:
-                        self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = "BMTU"
+                        self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = pagamento
                     
                     elif "[2,0]" in child_object.Id:
                         self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = data_proximo_dia
@@ -337,11 +357,30 @@ class F110:
                 CAMPOS_F110_STATUS = self.buscar_campo(CAMPOS_F110_STATUS[0])
                 CAMPOS_F110_STATUS = self.buscar_campo(CAMPOS_F110_STATUS[1])
 
-                for x in range(80):
-                    if self.verificar_status(str(CAMPOS_F110_STATUS)):
+                # for x in range(80):
+                #     if self.verificar_status(str(CAMPOS_F110_STATUS)):
+                #         break
+                #     self.session.findById("wnd[0]").sendVKey(14)
+                #     sleep(1)
+                    
+                limite:int = 80 
+                for num in range(limite):
+                    achou:bool = False
+                    for caminho in CAMPOS_F110_STATUS:
+                        try:
+                            if self.session.findById(caminho).Text == 'Proposta de pagamento criada':
+                                achou = True
+                        except:
+                            pass
+                    if achou:
                         break
+                    
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
+                    if num > (limite-2):
+                        raise TimeoutError("não foi possivel identificar se a Proposta de Pagamento foi criada!")                    
+                    
+                    
 
                 self.session.findById("wnd[0]/tbar[1]/btn[7]").press()
 
@@ -427,14 +466,15 @@ class F110:
         print("testando F110.py")
 
 if __name__ == "__main__":
-    register_erro: LogError = LogError()
-    try:
-        bot: F110 = F110(int(input("dias: "))) #type: ignore
-        bot.mostrar_datas()
-        bot.iniciar()
-    except Exception as error:
-        print(f"{type(error)} -> {error}")
-        error_format:str = traceback.format_exc().replace("\n", "|||")
-        register_erro.register(tipo=type(error), descri=str(error), trace=error_format)
+    pass
+    # register_erro: LogError = LogError()
+    # try:
+    #     bot: F110 = F110(int(input("dias: "))) #type: ignore
+    #     bot.mostrar_datas()
+    #     bot.iniciar(Processos())
+    # except Exception as error:
+    #     print(f"{type(error)} -> {error}")
+    #     error_format:str = traceback.format_exc().replace("\n", "|||")
+    #     register_erro.register(tipo=type(error), descri=str(error), trace=error_format)
     
-    input()
+    # input()

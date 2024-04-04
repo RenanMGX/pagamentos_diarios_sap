@@ -162,7 +162,7 @@ class RotinasDB:
         
         return letras
     
-    def available(self, use_and_save:bool=False) -> str:
+    def available(self, use_and_save:bool=False, all:bool=False) -> str:
         letras_disponiveis = deepcopy(self.rotinas_letras)
         for letra in self.load():
             try:
@@ -173,7 +173,10 @@ class RotinasDB:
         if len(letras_disponiveis) > 0:
             if use_and_save:
                 self.save_utilized(letter=letras_disponiveis[-1])  
-            return letras_disponiveis[-1]
+            if not all:
+                return letras_disponiveis[-1]
+            else:
+                return str(letras_disponiveis)
         raise Exception("sem letras disponiveis")
     
     def save_utilized(self, *, letter) -> None:
@@ -193,9 +196,9 @@ if __name__ == "__main__":
 
     # print(procurar_rotinas.ler())
     # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
-    bot = RotinasDB(date=datetime.now()-relativedelta(days=3))
+    bot = RotinasDB(date=datetime.now()-relativedelta(days=0))
 
-    letr = bot.available()
+    letr = bot.available(all=True)
     print(letr)
     #bot.save_utilized(letter=letr)
     
