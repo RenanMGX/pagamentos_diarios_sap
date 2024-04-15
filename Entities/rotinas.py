@@ -132,7 +132,7 @@ class RotinasDB:
     def __init__(self, date:datetime=datetime.now()) -> None:
         self.__date:datetime = date
         self.__crd:dict = db_crd
-        self.__rotinas_letras:list = [chr(101 + num) for num in range(22)]
+        self.__rotinas_letras:list = [chr(103 + num) for num in range(24)] + [chr(600 + num) for num in range(230)]
     
     @property
     def date(self):
@@ -164,6 +164,7 @@ class RotinasDB:
     
     def available(self, use_and_save:bool=False, all:bool=False) -> str:
         letras_disponiveis = deepcopy(self.rotinas_letras)
+        #letras_disponiveis.reverse()
         for letra in self.load():
             try:
                 letras_disponiveis.pop(letras_disponiveis.index(letra))

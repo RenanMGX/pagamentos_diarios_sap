@@ -26,16 +26,17 @@ if __name__ == "__main__":
             "qas" : ["S4Q","SAP_QAS"],
             "prd" :  ["S4P", "SAP_PRD"]
         }
-        choose_param = "qas" #alterar entrada e ambiente SAP
+        choose_param = "prd" #alterar entrada e ambiente SAP
         
         crd:dict = Credential(param[choose_param][1]).load()
         processos:Processos = Processos()
         processos.boleto = True
-        processos.consumo = False
+        processos.consumo = True
         processos.imposto = False    
         
         date:datetime = datetime.now()
         date = date.replace(hour=0,minute=0,second=0,microsecond=0)
+        date = date + relativedelta(days=1)
         print(date)
         
         preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
@@ -56,7 +57,7 @@ if __name__ == "__main__":
         )
         
         #bot.mostrar_datas()
-        bot.iniciar(processos, salvar_letra=False, fechar_sap_no_final=True)
+        bot.iniciar(processos, empresas_separada=["N013"], salvar_letra=True, fechar_sap_no_final=True)
     
     except:
         path:str = "logs/"
