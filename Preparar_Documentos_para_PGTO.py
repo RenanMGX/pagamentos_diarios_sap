@@ -50,6 +50,8 @@ class Preparar:
         self.__fornecedores_pgto_T_excel:str = "Lista de Fornecedores.xlsx"
         self.__fornecedores_pgto_T_txt:str = "lista_fornecedores_pgto_T.txt"
         
+        self.__session: win32com.client.CDispatch
+        
     @property
     def path_files(self):
         return self.__path_files
@@ -93,7 +95,10 @@ class Preparar:
                     datas_para_retorno[key] = {
                         "data_atual" : value,
                         "data_sap" : value.strftime('%d.%m.%Y'),
-                        "data_sap_atribuicao" : value.strftime('%d.%m.%Y R')
+                        "data_sap_bmtu" : value.strftime('%d.%m'),
+                        "data_sap_atribuicao" : value.strftime('%d.%m.%Y R'),
+                        "data_sap_consumo" : value.strftime('%d.%m.%Y O'),
+                        "data_sap_imposto" : value.strftime('%d.%m.%Y J')                        
                     }
                 else:
                     print(f"{value.strftime('%d.%m.%Y')=}: final de semana")
@@ -386,7 +391,7 @@ class Preparar:
         
 if __name__ == "__main__":
     try:
-        crd:dict = Credential("creden/SAP").load()
+        crd:dict = Credential("SAP_PRD").load()
         
         bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
         

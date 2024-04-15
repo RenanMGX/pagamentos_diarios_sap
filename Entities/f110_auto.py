@@ -6,6 +6,7 @@ from getpass import getuser
 import traceback
 from time import sleep
 import xlwings as xw # type: ignore
+from sap import SAPManipulation
 
 try:
     from Entities.log_error import LogError
@@ -21,15 +22,15 @@ try:
 except:
     from process import Processos
     
-class F110:
-    def __init__(self, dia_execucao:datetime) -> None:
+class F110Auto(SAPManipulation):
+    def __init__(self, *,date:datetime, user:str, password:str, ambiente:str) -> None:
         '''
         Parametros
         dia_execao (int):  Qtd de dias para a execução: 0 = hoje; 1 = amanhâ; 2 = em 2 dias e assim por diante...
         '''
         self.log_error: LogError = LogError()
 
-        self.__data_atual: datetime = dia_execucao
+        self.__data_atual: datetime = date
         self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
         self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
         self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
@@ -39,6 +40,8 @@ class F110:
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
         self.nome_arquivo = f"Relatorio_SAP_{datetime.now().strftime('%d%m%Y%H%M%S')}.xlsx"
+        
+        SAPManipulation.__init__(self, user=user,password=password,ambiente=ambiente)
 
     def mostrar_datas(self):
         """mostra todas as datas que serão preenchidas pelo programa
@@ -139,28 +142,34 @@ class F110:
             lista.append(child_object.Id.replace("/app/con[0]/ses[0]/", ""))
         return lista
 
-    def iniciar(self, processo:Processos) -> None:
+    @SAPManipulation.usar_sap
+    def iniciar(self, processo:Processos, empresas_separada:list=[], fechar_sap_no_final:bool=False, salvar_letra:bool=True) -> None:
         if not isinstance(processo, Processos):
             raise TypeError("apenas objeto do tipo Processos Permitido")
+        if not isinstance(empresas_separada, list):
+            raise TypeError("apenas objeto listas")
         #procurar_rotinas = Rotinas(self.__data_atual)
         rotinas_db = RotinasDB(self.__data_atual)
         
-        if not self._conectar():
-            return
-        
-        if self._extrair_relatorio():                   
+        # if not self._conectar():
+        #     return
+        lista: list
+        if not empresas_separada:
+            if self._extrair_relatorio():                   
 
-            df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
-            df = df['Empresa']# type: ignore
+                df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
+                df = df['Empresa']# type: ignore
 
-            lista: list = df.unique().tolist() # type: ignore
-            lista = [x for x in lista if x is not None]
+                lista = df.unique().tolist() # type: ignore
+                lista = [x for x in lista if x is not None]
+            else:
+                print("sem relatorio")
+                return
         else:
-            print("sem relatorio")
-            return
+            lista = empresas_separada
 
         #lista: list = ['N000']
-
+        print(lista)
         #rotinas: list = procurar_rotinas.proxima_rotina()
         if processo.boleto:
             self._SAP_OP(
@@ -168,7 +177,7 @@ class F110:
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao,
-                rotina=rotinas_db.available(use_and_save=True),
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
                 banco_pagamento = "PAGTO_BRADESCO"
                 #rotina=rotinas["primeira"]
@@ -179,7 +188,7 @@ class F110:
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao2,
-                rotina=rotinas_db.available(use_and_save=True),
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
                 banco_pagamento = "PAGTO_BRADESCO"
             )
@@ -191,7 +200,7 @@ class F110:
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao3,
-                rotina=rotinas_db.available(use_and_save=True),
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento="O",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
@@ -203,7 +212,7 @@ class F110:
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao4,
-                rotina=rotinas_db.available(use_and_save=True),
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento="J",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
@@ -411,9 +420,9 @@ class F110:
                 print(f"    Concluido:     {empresa+rotina}")
 
             except IndexError as error:
-                print(f"    Error: {empresa+rotina} == Empresa {empresa} não existe na tabela T001")
+                print(f"    Error: {empresa+rotina} == Empresa {empresa} não existe na tabela T001 - {error}")
                 print()
-                self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001", trace=traceback.format_exc())
+                self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:
                 print(f"    Error: {empresa+rotina} == {error}")
                 self.log_error.register(tipo=type(error), descri=str(error), trace=traceback.format_exc())
