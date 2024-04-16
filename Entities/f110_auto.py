@@ -7,6 +7,9 @@ import traceback
 from time import sleep
 import xlwings as xw # type: ignore
 from sap import SAPManipulation
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 try:
     from Entities.log_error import LogError
@@ -242,13 +245,23 @@ class F110Auto(SAPManipulation):
                 self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nf110"
                 self.session.findById("wnd[0]").sendVKey (0)
 
-                sleep(1)
-                CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
-                CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
+                passou_inicio:bool = False
+                for _ in range(10):
+                    try:
+                        sleep(1)
+                        CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
+                        CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
 
+                        #import pdb; pdb.set_trace()
 
-                self.session.findById(CAMPOS_F110[1]).text = data_sap # Data de Execução *** Modificar ***
-                self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação 
+                        self.session.findById(CAMPOS_F110[1]).text = data_sap # Data de Execução *** Modificar ***
+                        self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação 
+                        passou_inicio = True
+                        break
+                    except Exception as error:
+                        msg_inicio_error = error
+                if not passou_inicio:
+                    raise Exception(msg_inicio_error)
 
                 CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4])
 
@@ -256,7 +269,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
 
                 if (texto_aviso1:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa+rotina} == {texto_aviso1}")
+                    print(f"    Aviso: {empresa} == {texto_aviso1}")
                     #raise Exception(texto_aviso1)
 
                 
@@ -290,7 +303,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[2]).select()
 
                 if (texto_aviso2:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa+rotina} == {texto_aviso2}")
+                    print(f"    Aviso: {empresa} == {texto_aviso2}")
                     #raise Exception(texto_aviso2)
 
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_ABAS[2])
@@ -318,7 +331,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
                 if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa+rotina} == {texto_aviso3}")
+                    print(f"    Aviso: {empresa} == {texto_aviso3}")
                     #raise Exception(texto_aviso3)
 
                 CAMPOS_F110_LOG = self.buscar_campo(CAMPOS_F110_ABAS[3])
@@ -336,7 +349,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[4]).select()
 
                 if (texto_aviso4:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa+rotina} == {texto_aviso4}")
+                    print(f"    Aviso: {empresa} == {texto_aviso4}")
                     #raise Exception(texto_aviso4)
 
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
@@ -418,9 +431,10 @@ class F110Auto(SAPManipulation):
                     
 
                 print(f"    Concluido:     {empresa+rotina}")
+                self.log_error.register(tipo="Concluido", descri=str(empresa+rotina), trace="")
 
             except IndexError as error:
-                print(f"    Error: {empresa+rotina} == Empresa {empresa} não existe na tabela T001 - {error}")
+                print(f"    Error: {empresa} == Empresa {empresa+rotina} não existe na tabela T001 - {error}")
                 print()
                 self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:

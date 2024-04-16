@@ -132,7 +132,7 @@ class RotinasDB:
     def __init__(self, date:datetime=datetime.now()) -> None:
         self.__date:datetime = date
         self.__crd:dict = db_crd
-        self.__rotinas_letras:list = [chr(103 + num) for num in range(24)] + [chr(600 + num) for num in range(230)]
+        self.__rotinas_letras:list = [chr(103 + num) for num in range(24)] + [chr(600 + num) for num in range(150)]
     
     @property
     def date(self):

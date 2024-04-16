@@ -23,10 +23,10 @@ class LogError:
         
         self.__path += file
         if not os.path.exists(self.__path):
-            with open(self.__path, "w")as _file:
+            with open(self.__path, "w", encoding='utf-8')as _file:
                 _file.write(f"data;tipo;descri;traceback\n")
     
-    def register(self, tipo:type, descri:str, trace:str=" ") -> None:
+    def register(self, tipo:type|str, descri:str, trace:str=" ") -> None:
         '''
         metodo para salvar o registro no arquivo .csv
 
@@ -39,7 +39,7 @@ class LogError:
         trace = trace.replace('\n', '|||')
         for x in range(5*60):
             try:
-                with open(self.__path, 'a')as file:
+                with open(self.__path, 'a', encoding='utf-8')as file:
                     file.write(f"{datetime.now()};{tipo};{descri};{trace}\n")
                     return 
             except PermissionError:
