@@ -37,6 +37,8 @@ class Preparar:
             raise FileNotFoundError(f"{arquivo_datas=} não foi encontrado!")
         if not arquivo_datas.endswith("xlsx"):
             raise Exception(f"{arquivo_datas=} apenas arquivos xlsx")
+        
+        self._fechar_excel(arquivo_datas)
         self.__arquivo_datas: pd.DataFrame = pd.read_excel(arquivo_datas)
         
         self.__datas: dict = self.montar_datas(dias_execucao)
@@ -206,8 +208,12 @@ class Preparar:
         if not os.path.exists(caminho_fornecedores_pgto_T):
             raise NotADirectoryError(f"{caminho_fornecedores_pgto_T=} caminho não encontrado!")
         
+        self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)
         pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)['Conta'].to_csv(self.path_files + self.fornecedores_c_debitos_txt, header=False, index=False)
+
+        self._fechar_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)
         pd.read_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)['Conta'].to_csv(self.path_files + self.fornecedores_pgto_T_txt, header=False, index=False)
+            
         print("Documentos prontos")
     
     # Preparar os documentos na FBL1N do tipo transferência (T).
@@ -372,7 +378,11 @@ class Preparar:
         except Exception as error:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
     
-    def _fechar_excel(self, *, file_name:str, timeout:int=15) -> None:
+    def _fechar_excel(self, file_name:str, *, timeout:int=15) -> None:
+        if "/" in file_name:
+            file_name = file_name.split("/")[-1]
+        if "\\" in file_name:
+            file_name = file_name.split("\\")[-1]
         for _ in range(timeout):
             for app in xw.apps:
                 for open_file in app.books:

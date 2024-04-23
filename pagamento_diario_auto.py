@@ -60,7 +60,7 @@ if __name__ == "__main__":
             
             #bot.mostrar_datas()
             #empresas_separada=["N013"]
-            bot.iniciar(processos, empresas_separada=["N013"], salvar_letra=True, fechar_sap_no_final=True)
+            bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)
         
         except:
             path:str = "logs/"

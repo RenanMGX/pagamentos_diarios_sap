@@ -502,6 +502,10 @@ class F110Auto(SAPManipulation):
         return True # retorna 
     
     def _fechar_excel(self, file_name:str, timeout:int=10) -> bool:
+        if "/" in file_name:
+            file_name = file_name.split("/")[-1]
+        if "\\" in file_name:
+            file_name = file_name.split("\\")[-1]
         for _ in range(timeout):
             for app in xw.apps:
                 for open_app in app.books:
