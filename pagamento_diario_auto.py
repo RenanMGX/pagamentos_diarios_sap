@@ -33,8 +33,8 @@ if __name__ == "__main__":
             crd:dict = Credential(param[choose_param][1]).load()
             processos:Processos = Processos()
             processos.boleto = True
-            processos.consumo = False
-            processos.imposto = False    
+            processos.consumo = True
+            processos.imposto = True    
             
             date:datetime = datetime.now()
             date = date.replace(hour=0,minute=0,second=0,microsecond=0)

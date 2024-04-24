@@ -132,7 +132,7 @@ class RotinasDB:
     def __init__(self, date:datetime=datetime.now()) -> None:
         self.__date:datetime = date
         self.__crd:dict = db_crd
-        self.__rotinas_letras:list = [chr(103 + num) for num in range(24)] + [chr(600 + num) for num in range(150)]
+        self.__rotinas_letras:list = [chr(101 + num) for num in range(22)]
     
     @property
     def date(self):
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
     bot = RotinasDB(date=datetime.now()-relativedelta(days=0))
 
-    letr = bot.available(all=True)
-    print(letr)
+    print(bot.available(all=True))
+    print(bot.available())
     #bot.save_utilized(letter=letr)
     
