@@ -62,11 +62,12 @@ if __name__ == "__main__":
             #empresas_separada=["N013"]
             bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)
         
-        except:
+        except Exception as error:
             path:str = "logs/"
             if not os.path.exists(path):
                 os.makedirs(path)
             file_name = path + f"LogError_{datetime.now().strftime('%d%m%Y%H%M%Y')}.txt"
             with open(file_name, 'w', encoding='utf-8')as _file:
                 _file.write(traceback.format_exc())
+            raise error
         sleep(1)

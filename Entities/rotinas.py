@@ -191,6 +191,21 @@ class RotinasDB:
         cursor.execute(f"INSERT INTO rotinas(date, rotina) VALUES ('{self.date.strftime('%Y-%m-%d')}', '{letter}')")
         connection.commit()
         connection.close()
+        
+    def test(self):
+        connection = mysql.connect(
+            host=self.crd['host'],
+            user=self.crd['user'],
+            password=self.crd['password'],
+            database=self.crd['database']
+        )
+        cursor = connection.cursor()
+        cursor.execute(f"SELECT * FROM rotinas WHERE date='{self.date.strftime('%Y-%m-%d')}'")
+        for dados in cursor.fetchall():
+            print(dados)
+        
+        connection.close()
+        
 
 if __name__ == "__main__":
     # procurar_rotinas = Rotinas(datetime.now())
@@ -199,7 +214,9 @@ if __name__ == "__main__":
     # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
     bot = RotinasDB(date=datetime.now()-relativedelta(days=0))
 
-    print(bot.available(all=True))
-    print(bot.available())
+    
+    bot.test()
+    #print(bot.available(all=True))
+    #print(bot.available())
     #bot.save_utilized(letter=letr)
     

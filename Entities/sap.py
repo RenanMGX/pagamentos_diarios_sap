@@ -63,7 +63,10 @@ class SAPManipulation():
             sleep(1)
             self.session.findById("wnd[0]").close()
             sleep(1)
-            self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
+            try:
+                self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
+            except:
+                self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()
         except Exception as error:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
 

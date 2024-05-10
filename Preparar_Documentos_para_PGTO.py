@@ -374,7 +374,10 @@ class Preparar:
             sleep(1)
             self.session.findById("wnd[0]").close()
             sleep(1)
-            self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
+            try:
+                self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
+            except:
+                self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()
         except Exception as error:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
     
@@ -412,7 +415,7 @@ if __name__ == "__main__":
         bot.quarto_preparar_documentos_tipo_b()
         
         bot.fechar_sap()
-    except:
+    except Exception as error:
         path = "logs\\"
         if not os.path.exists("logs"):
             os.makedirs("logs")
@@ -420,3 +423,6 @@ if __name__ == "__main__":
         file = f"{path}log_error_{datetime.now().strftime('%d%m%Y%H%M%S')}"
         with open(file, 'w', encoding='utf-8')as _file:
             _file.write(str(traceback.format_exc()))
+    
+        raise error        
+        
