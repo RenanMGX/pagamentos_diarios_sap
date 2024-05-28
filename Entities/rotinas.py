@@ -201,7 +201,7 @@ class RotinasDB:
         )
         cursor = connection.cursor()
         cursor.execute(f"SELECT * FROM rotinas WHERE date='{self.date.strftime('%Y-%m-%d')}'")
-        for dados in cursor.fetchall():
+        for dados in cursor.fetchall(): #type: ignore
             print(dados)
         
         connection.close()

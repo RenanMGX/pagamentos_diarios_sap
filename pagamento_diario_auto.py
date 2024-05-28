@@ -9,6 +9,7 @@ from getpass import getuser
 import os
 from dateutil.relativedelta import relativedelta
 from time import sleep
+from typing import List,Literal,Dict
 
 class PagamentosDiariosAuto(F110Auto):
     def __init__(self, *,user:str, password:str, ambiente:str, date:datetime) -> None:
@@ -24,7 +25,7 @@ class PagamentosDiariosAuto(F110Auto):
 if __name__ == "__main__":
     for _ in range(1):
         try:
-            param = {
+            param:dict = {
                 "qas" : ["S4Q","SAP_QAS"],
                 "prd" :  ["S4P", "SAP_PRD"]
             }           
@@ -34,7 +35,8 @@ if __name__ == "__main__":
             processos:Processos = Processos()
             processos.boleto = True
             processos.consumo = True
-            processos.imposto = True    
+            processos.imposto = True 
+            processos.darfs = True   
             
             date:datetime = datetime.now()
             date = date.replace(hour=0,minute=0,second=0,microsecond=0)

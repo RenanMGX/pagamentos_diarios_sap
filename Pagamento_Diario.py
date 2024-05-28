@@ -41,18 +41,23 @@ class Ui_Dialog(object):
         
         self.cb_boletos = QtWidgets.QCheckBox(Dialog)
         self.cb_boletos.setObjectName("boletos")
-        self.cb_boletos.setGeometry(QtCore.QRect(100, 240, 121, 31))
+        self.cb_boletos.setGeometry(QtCore.QRect(100, 230, 121, 31))
         self.cb_boletos.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         
         self.cb_consumo = QtWidgets.QCheckBox(Dialog)
         self.cb_consumo.setObjectName("boletos")
-        self.cb_consumo.setGeometry(QtCore.QRect(100, 265, 121, 31))
+        self.cb_consumo.setGeometry(QtCore.QRect(100, 255, 121, 31))
         self.cb_consumo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
 
         self.cb_imposto = QtWidgets.QCheckBox(Dialog)
         self.cb_imposto.setObjectName("imposto")
-        self.cb_imposto.setGeometry(QtCore.QRect(100, 290, 121, 31))
+        self.cb_imposto.setGeometry(QtCore.QRect(100, 280, 121, 31))
         self.cb_imposto.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
+        
+        self.cb_darfs = QtWidgets.QCheckBox(Dialog)
+        self.cb_darfs.setObjectName("DARFS, impostos Federais.")
+        self.cb_darfs.setGeometry(QtCore.QRect(100, 305, 250, 31))
+        self.cb_darfs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
 
         self.bt_iniciar = QtWidgets.QPushButton(Dialog)
         self.bt_iniciar.setGeometry(QtCore.QRect(130, 350, 121, 31))
@@ -69,6 +74,7 @@ class Ui_Dialog(object):
         self.cb_boletos.setText(_translate("Dialog", "Boletos"))
         self.cb_consumo.setText(_translate("Dialog", "Consumo"))
         self.cb_imposto.setText(_translate("Dialog", "Imposto"))
+        self.cb_darfs.setText(_translate("Dialog", "DARFS, impostos Federais."))
 
     def retornar_data(self):
         calendar_date = self.w_calendario.selectedDate()
@@ -76,13 +82,14 @@ class Ui_Dialog(object):
         processo.boleto = self.cb_boletos.isChecked()
         processo.consumo = self.cb_consumo.isChecked()
         processo.imposto = self.cb_imposto.isChecked()
+        processo.darfs = self.cb_darfs.isChecked()
         Dialog.close()
 
 
 if __name__ == "__main__":
     date = Date()
     processo = Processos()
-    version = "v1.2"
+    version = "v1.3"
     
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()

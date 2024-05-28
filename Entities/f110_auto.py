@@ -38,7 +38,8 @@ class F110Auto(SAPManipulation):
         self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
         self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
         self.__data_sap_atribuicao3: str = self.__data_atual.strftime('%d.%m.%Y O') # Valor da Atribuição com O
-        self.__data_sap_atribuicao4: str = self.__data_atual.strftime('%d.%m.%Y J') # Valor da Atribuição com O
+        self.__data_sap_atribuicao4: str = self.__data_atual.strftime('%d.%m.%Y J') # Valor da Atribuição com J
+        self.__data_sap_atribuicao5: str = self.__data_atual.strftime('%d.%m.%Y I') # Valor da Atribuição com I
         self.__data_proximo_dia: str = (self.__data_atual + relativedelta(days=1)).strftime('%d.%m.%Y') # Data do dia seguinte a programação de PGTO 
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
@@ -219,7 +220,20 @@ class F110Auto(SAPManipulation):
                 pagamento="J",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
-
+            
+        #pagamento I
+        if processo.darfs:
+            self._SAP_OP(
+                lista_empresas=lista,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao5,
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                pagamento="I",
+                banco_pagamento = "BRADESCO_TRIBU"
+            )
+            
+            
 #realiza as rotinas no SAP
     def _SAP_OP(
             self,
