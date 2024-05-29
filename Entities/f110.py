@@ -149,18 +149,18 @@ class F110:
         if not self._conectar():
             return
         
-        # if self._extrair_relatorio():                   
+        if self._extrair_relatorio():                   
 
-        #     df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
-        #     df = df['Empresa']# type: ignore
+            df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
+            df = df['Empresa']# type: ignore
 
-        #     lista: list = df.unique().tolist() # type: ignore
-        #     lista = [x for x in lista if x is not None]
-        # else:
-        #     print("sem relatorio")
-        #     return
+            lista: list = df.unique().tolist() # type: ignore
+            lista = [x for x in lista if x is not None]
+        else:
+            print("sem relatorio")
+            return
 
-        lista: list = ['N000']
+        #lista: list = ['N000']
 
         #rotinas: list = procurar_rotinas.proxima_rotina()
         if processo.boleto:
