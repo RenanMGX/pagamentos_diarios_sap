@@ -3,10 +3,12 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 from getpass import getuser
+from typing import Literal
 import traceback
 from time import sleep
 import xlwings as xw # type: ignore
 from sap import SAPManipulation
+from copy import deepcopy
 import sys
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -44,6 +46,7 @@ class F110Auto(SAPManipulation):
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
         self.nome_arquivo = f"Relatorio_SAP_{datetime.now().strftime('%d%m%Y%H%M%S')}.xlsx"
+        
         
         SAPManipulation.__init__(self, user=user,password=password,ambiente=ambiente)
 
@@ -151,29 +154,42 @@ class F110Auto(SAPManipulation):
         if not isinstance(processo, Processos):
             raise TypeError("apenas objeto do tipo Processos Permitido")
         if not isinstance(empresas_separada, list):
-            raise TypeError("apenas objeto listas")
+            raise TypeError("apenas Listas")
         #procurar_rotinas = Rotinas(self.__data_atual)
-        rotinas_db = RotinasDB(self.__data_atual)
+        rotinas_db = RotinasDB(self.__data_atual, ambiente=self.ambiente) #type: ignore
         
         # if not self._conectar():
         #     return
         lista: list
+        lista_ralacionais:list
         if not empresas_separada:
             if self._extrair_relatorio():                   
 
-                df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
-                df = df['Empresa']# type: ignore
-
-                lista = df.unique().tolist() # type: ignore
+                df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo, dtype={'Conta':'str'}).replace(float('nan'), None) 
+                
+                df_basic = deepcopy(df['Empresa'])
+                lista = df_basic.unique().tolist() 
                 lista = [x for x in lista if x is not None]
+                
+                df_contas:pd.DataFrame|pd.Series = deepcopy(df[['Empresa', 'Conta']])
+                
+                df_contas = df_contas.replace(float('nan'), '0')
+                df_contas["Conta"] = df_contas['Conta'].astype(int)
+                df_contas = df_contas[df_contas['Conta'] >= 1100000]
+                df_contas = df_contas['Empresa']
+                
+                lista_ralacionais = df_contas.unique().tolist() 
+                lista_ralacionais = [x for x in lista_ralacionais if x is not None]
+                
             else:
                 print("sem relatorio")
                 return
         else:
             lista = empresas_separada
+            lista_ralacionais = empresas_separada
 
         #lista: list = ['N000']
-        print(lista)
+        #print(lista)
         #rotinas: list = procurar_rotinas.proxima_rotina()
         if processo.boleto:
             self._SAP_OP(
@@ -233,6 +249,19 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
             
+        #pagamento Relacionais
+        if processo.relacionais:
+            self._SAP_OP(
+                lista_empresas=lista_ralacionais,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao,
+                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                pagamento="BMTU",
+                banco_pagamento = "PAGTO_BRADESCO",
+                relacionais=True
+            )
+            
             
 #realiza as rotinas no SAP
     def _SAP_OP(
@@ -242,8 +271,9 @@ class F110Auto(SAPManipulation):
             data_proximo_dia: str,
             data_sap_atribuicao: str,
             rotina: str,
-            pagamento:str = "BMTU",
-            banco_pagamento:str = "PAGTO_BRADESCO"
+            pagamento:Literal["BMTU", "O", "J", "I"],
+            banco_pagamento:Literal["PAGTO_BRADESCO", "BRADESCO_TRIBU"],
+            relacionais:bool = False
     ) -> None:
         '''
         realiza as rotinas no SAP
@@ -251,6 +281,7 @@ class F110Auto(SAPManipulation):
         lista_empresas (list) : Lista das empresas que serão executadas
         '''
         if not isinstance(lista_empresas, list):
+            print("apenas listas")
             return None
         
         for empresa in lista_empresas:
@@ -330,8 +361,14 @@ class F110Auto(SAPManipulation):
                 for x in range(5):
                     try:
                         for child_object in self.session.findById("wnd[1]/usr/").Children:
+                            campo_para_data:str
+                            if relacionais:
+                                campo_para_data = "Chave referência 3"
+                            else:
+                                campo_para_data = "Atribuição"
+                            
                             nome_text: str = child_object.Text
-                            if "Atribuição".lower() in nome_text.lower():
+                            if campo_para_data.lower() in nome_text.lower():
                                 caminho = child_object.Id.replace("/app/con[0]/ses[0]/", "")
                                 self.session.findById(caminho).setFocus()
                         break
@@ -342,6 +379,9 @@ class F110Auto(SAPManipulation):
 
                 self.session.findById(CAMPOS_F110_SELECAO_CRITE_SEL[4]).text = data_sap_atribuicao # data Atribuição 
 
+                #import pdb;pdb.set_trace()
+                
+                
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
                 if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":

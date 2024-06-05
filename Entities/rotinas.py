@@ -8,6 +8,7 @@ import pandas as pd
 import mysql.connector as mysql
 from dateutil.relativedelta import relativedelta
 from copy import deepcopy
+from typing import Literal
 
 try:
     from Entities.db_credencial import crd as db_crd
@@ -129,10 +130,12 @@ class Rotinas:
             return self.__possiveis_rotinas[quantidade_rotinas_diaria]
 
 class RotinasDB:
-    def __init__(self, date:datetime=datetime.now()) -> None:
+    #"S4Q"
+    def __init__(self, date:datetime=datetime.now(), *, ambiente:Literal["S4Q", ""]="") -> None:
         self.__date:datetime = date
         self.__crd:dict = db_crd
-        self.__rotinas_letras:list = [chr(101 + num) for num in range(22)]
+ 
+        self.__rotinas_letras:list = [chr(101 + num) for num in range(22)] if ambiente != "S4Q" else [chr(160 + num) for num in range(100)]
     
     @property
     def date(self):
@@ -156,14 +159,16 @@ class RotinasDB:
         cursor = connection.cursor()
         cursor.execute(f"SELECT rotina FROM rotinas WHERE date='{self.date.strftime('%Y-%m-%d')}'")
         
-        letras:list = [letra[0].lower() for letra in cursor.fetchall()]#type: ignore
-                
+        #letras:list = [letra[0].lower() for letra in cursor.fetchall()]#type: ignore
+        #print(letras, end="######\n")
+        letras:list = [letra[0] for letra in cursor.fetchall()]#type: ignore        
         connection.close()
         
         return letras
     
     def available(self, use_and_save:bool=False, all:bool=False) -> str:
         letras_disponiveis = deepcopy(self.rotinas_letras)
+        #print(letras_disponiveis, end="$$$$$$$$$$\n")
         #letras_disponiveis.reverse()
         for letra in self.load():
             try:
@@ -212,10 +217,13 @@ if __name__ == "__main__":
 
     # print(procurar_rotinas.ler())
     # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
-    bot = RotinasDB(date=datetime.now()-relativedelta(days=0))
-
+    bot = RotinasDB(date=datetime.now()-relativedelta(days=0), ambiente='S4Q')
+    print(bot.date)
+    print(bot.rotinas_letras)
+    print(bot.available(use_and_save=True))
+    #print(bot.load())
     
-    bot.test()
+    #bot.test()
     #print(bot.available(all=True))
     #print(bot.available())
     #bot.save_utilized(letter=letr)

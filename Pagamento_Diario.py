@@ -39,30 +39,45 @@ class Ui_Dialog(object):
         self.w_calendario.setDateEditEnabled(True)
         self.w_calendario.setObjectName("w_calendario")
         
+        altura:int = 180
+        quant_checkbox:int = 0
+        
         self.cb_boletos = QtWidgets.QCheckBox(Dialog)
         self.cb_boletos.setObjectName("boletos")
-        self.cb_boletos.setGeometry(QtCore.QRect(100, 230, 121, 31))
+        self.cb_boletos.setGeometry(QtCore.QRect(100, (altura + 25), 121, 31))
         self.cb_boletos.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
+        quant_checkbox += 1
         
         self.cb_consumo = QtWidgets.QCheckBox(Dialog)
         self.cb_consumo.setObjectName("boletos")
-        self.cb_consumo.setGeometry(QtCore.QRect(100, 255, 121, 31))
+        self.cb_consumo.setGeometry(QtCore.QRect(100, (altura + 50), 121, 31))
         self.cb_consumo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
-
+        quant_checkbox += 1
+        
         self.cb_imposto = QtWidgets.QCheckBox(Dialog)
         self.cb_imposto.setObjectName("imposto")
-        self.cb_imposto.setGeometry(QtCore.QRect(100, 280, 121, 31))
+        self.cb_imposto.setGeometry(QtCore.QRect(100, (altura + 75), 121, 31))
         self.cb_imposto.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
+        quant_checkbox += 1
         
         self.cb_darfs = QtWidgets.QCheckBox(Dialog)
         self.cb_darfs.setObjectName("DARFS, impostos Federais.")
-        self.cb_darfs.setGeometry(QtCore.QRect(100, 305, 250, 31))
+        self.cb_darfs.setGeometry(QtCore.QRect(100, (altura + 100), 250, 31))
         self.cb_darfs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
-
+        quant_checkbox += 1
+        
+        self.cb_relacionais = QtWidgets.QCheckBox(Dialog)
+        self.cb_relacionais.setObjectName("Relacionais")
+        self.cb_relacionais.setGeometry(QtCore.QRect(100, (altura + 125), 250, 31))
+        self.cb_relacionais.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
+        quant_checkbox += 1
+        
         self.bt_iniciar = QtWidgets.QPushButton(Dialog)
-        self.bt_iniciar.setGeometry(QtCore.QRect(130, 350, 121, 31))
+        self.bt_iniciar.setGeometry(QtCore.QRect(130, (altura + (quant_checkbox * 25) + 40), 121, 31))
         self.bt_iniciar.setObjectName("bt_iniciar")
         self.bt_iniciar.clicked.connect(self.retornar_data)
+        
+        
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -74,7 +89,8 @@ class Ui_Dialog(object):
         self.cb_boletos.setText(_translate("Dialog", "Boletos"))
         self.cb_consumo.setText(_translate("Dialog", "Consumo"))
         self.cb_imposto.setText(_translate("Dialog", "Imposto"))
-        self.cb_darfs.setText(_translate("Dialog", "DARFS, impostos Federais."))
+        self.cb_darfs.setText(_translate("Dialog", "DARFS, impostos Federais"))
+        self.cb_relacionais.setText(_translate("Dialog", "Relacionais"))
 
     def retornar_data(self):
         calendar_date = self.w_calendario.selectedDate()
@@ -83,13 +99,14 @@ class Ui_Dialog(object):
         processo.consumo = self.cb_consumo.isChecked()
         processo.imposto = self.cb_imposto.isChecked()
         processo.darfs = self.cb_darfs.isChecked()
+        processo.relacionais = self.cb_relacionais.isChecked()
         Dialog.close()
 
 
 if __name__ == "__main__":
     date = Date()
     processo = Processos()
-    version = "v1.4"
+    version = "v1.5"
     
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
@@ -100,6 +117,7 @@ if __name__ == "__main__":
     app.exec_()
     
     register_erro: LogError = LogError()
+    finalizar:bool = False
     try:
         if date.date == 0:
             raise Exception("data invalida")
@@ -112,4 +130,7 @@ if __name__ == "__main__":
         print(f"{type(error)} -> {error}")
         register_erro.register(tipo=type(error), descri=str(error), trace=traceback.format_exc())
     
+        if str(error) == "data invalida":
+            sys.exit()
+            
     input("Digite algo para finalizar o Script: ")    

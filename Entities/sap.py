@@ -6,6 +6,10 @@ import subprocess
 from time import sleep
 
 class SAPManipulation():
+    @property
+    def ambiente(self):
+        return self.__ambiente
+    
     def __init__(self, *, user:str, password:str, ambiente:str) -> None:
         self.__user:str = user
         self.__password:str = password

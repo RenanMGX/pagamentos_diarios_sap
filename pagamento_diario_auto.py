@@ -10,6 +10,7 @@ import os
 from dateutil.relativedelta import relativedelta
 from time import sleep
 from typing import List,Literal,Dict
+import pandas as pd
 
 class PagamentosDiariosAuto(F110Auto):
     def __init__(self, *,user:str, password:str, ambiente:str, date:datetime) -> None:
@@ -29,20 +30,18 @@ if __name__ == "__main__":
                 "qas" : ["S4Q","SAP_QAS"],
                 "prd" :  ["S4P", "SAP_PRD"]
             }           
-            choose_param = "prd" #alterar entrada e ambiente SAP
+            choose_param:Literal["qas", "prd"] = "qas" #alterar entrada e ambiente SAP
             
+            print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA\n{'#'*100}")
+                
+                            
             crd:dict = Credential(param[choose_param][1]).load()
             processos:Processos = Processos()
-            processos.boleto = True
-            processos.consumo = True
-            processos.imposto = True 
-            processos.darfs = True   
             
             date:datetime = datetime.now()
             date = date.replace(hour=0,minute=0,second=0,microsecond=0)
-            date = date + relativedelta(days=1)
+            date = (date + relativedelta(days=1)) if choose_param == "prd" else (date + relativedelta(days=0))
             print(date)
-            
             preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
 
             execute_program:bool = False
@@ -62,9 +61,24 @@ if __name__ == "__main__":
             
             #bot.mostrar_datas()
             #empresas_separada=["N013"]
-            bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)
+            if choose_param == "qas":
+                processos.boleto = True
+                processos.consumo = True
+                processos.imposto = True 
+                processos.darfs = True
+                processos.relacionais = True  
+                
+                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True)#, empresas_separada=["N000"])
+            else:
+                processos.boleto = True
+                processos.consumo = True
+                processos.imposto = True 
+                processos.darfs = True
+                processos.relacionais = True  
+                bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)
         
         except Exception as error:
+            print(error)
             path:str = "logs/"
             if not os.path.exists(path):
                 os.makedirs(path)

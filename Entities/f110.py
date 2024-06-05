@@ -6,6 +6,8 @@ from getpass import getuser
 import traceback
 from time import sleep
 import xlwings as xw # type: ignore
+from typing import Literal
+from copy import deepcopy
 
 try:
     from Entities.log_error import LogError
@@ -144,18 +146,31 @@ class F110:
         if not isinstance(processo, Processos):
             raise TypeError("apenas objeto do tipo Processos Permitido")
         #procurar_rotinas = Rotinas(self.__data_atual)
-        rotinas_db = RotinasDB(self.__data_atual)
+        rotinas_db = RotinasDB(self.__data_atual, ambiente='')
         
         if not self._conectar():
             return
-        
+
+        lista: list
+        lista_ralacionais:list
         if self._extrair_relatorio():                   
 
             df = pd.read_excel(self.caminho_arquivo + self.nome_arquivo).replace(float('nan'), None) 
-            df = df['Empresa']# type: ignore
-
-            lista: list = df.unique().tolist() # type: ignore
+            
+            df_basic = deepcopy(df['Empresa'])
+            lista = df_basic.unique().tolist() 
             lista = [x for x in lista if x is not None]
+            
+            df_contas:pd.DataFrame|pd.Series = deepcopy(df[['Empresa', 'Conta']])
+                
+            df_contas = df_contas.replace(float('nan'), '0')
+            df_contas["Conta"] = df_contas['Conta'].astype(int)
+            df_contas = df_contas[df_contas['Conta'] >= 1100000]
+            df_contas = df_contas['Empresa']
+                
+            lista_ralacionais = df_contas.unique().tolist() 
+            lista_ralacionais = [x for x in lista_ralacionais if x is not None]           
+            
         else:
             print("sem relatorio")
             return
@@ -221,6 +236,19 @@ class F110:
                 banco_pagamento = "BRADESCO_TRIBU"
             )
             
+        #pagamento Relacionais
+        if processo.relacionais:
+            self._SAP_OP(
+                lista_empresas=lista_ralacionais,
+                data_sap=self.__data_sap,
+                data_proximo_dia=self.__data_proximo_dia,
+                data_sap_atribuicao=self.__data_sap_atribuicao,
+                rotina=rotinas_db.available(use_and_save=True),
+                pagamento="BMTU",
+                banco_pagamento = "PAGTO_BRADESCO",
+                relacionais=True
+            )
+            
 
 #realiza as rotinas no SAP
     def _SAP_OP(
@@ -230,8 +258,9 @@ class F110:
             data_proximo_dia: str,
             data_sap_atribuicao: str,
             rotina: str,
-            pagamento:str = "BMTU",
-            banco_pagamento:str = "PAGTO_BRADESCO"
+            pagamento:Literal["BMTU", "O", "J", "I"],
+            banco_pagamento:Literal["PAGTO_BRADESCO", "BRADESCO_TRIBU"],
+            relacionais:bool = False
     ) -> None:
         '''
         realiza as rotinas no SAP
@@ -308,8 +337,14 @@ class F110:
                 for x in range(5):
                     try:
                         for child_object in self.session.findById("wnd[1]/usr/").Children:
+                            campo_para_data:str
+                            if relacionais:
+                                campo_para_data = "Chave referência 3"
+                            else:
+                                campo_para_data = "Atribuição"
+                            
                             nome_text: str = child_object.Text
-                            if "Atribuição".lower() in nome_text.lower():
+                            if campo_para_data.lower() in nome_text.lower():
                                 caminho = child_object.Id.replace("/app/con[0]/ses[0]/", "")
                                 self.session.findById(caminho).setFocus()
                         break
@@ -319,7 +354,7 @@ class F110:
                 self.session.findById("wnd[1]").sendVKey(2)
 
                 self.session.findById(CAMPOS_F110_SELECAO_CRITE_SEL[4]).text = data_sap_atribuicao # data Atribuição 
-
+                
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
                 if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":

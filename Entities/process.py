@@ -4,6 +4,7 @@ class Processos:
         self.__consumo:bool = False
         self.__imposto:bool = False
         self.__darfs:bool = False
+        self.__relacionais:bool = False
         
     def __str__(self) -> str:
        return f"{self.boleto=} \n{self.consumo=} \n{self.imposto=}"
@@ -43,6 +44,15 @@ class Processos:
         if not isinstance(valor, bool):
             raise TypeError("apenas valor booleano!")
         self.__darfs = valor
+        
+    @property
+    def relacionais(self):
+        return self.__relacionais
+    @relacionais.setter
+    def relacionais(self, valor:bool):
+        if not isinstance(valor, bool):
+            raise TypeError("apenas valor booleano!")
+        self.__relacionais = valor
 
 if __name__ == "__main__":
     pass
