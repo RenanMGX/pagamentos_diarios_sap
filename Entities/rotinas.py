@@ -166,7 +166,7 @@ class RotinasDB:
         
         return letras
     
-    def available(self, use_and_save:bool=False, all:bool=False) -> str:
+    def available(self, use_and_save:bool=False, all:bool=False, count:bool=False) -> str:
         letras_disponiveis = deepcopy(self.rotinas_letras)
         #print(letras_disponiveis, end="$$$$$$$$$$\n")
         #letras_disponiveis.reverse()
@@ -175,6 +175,9 @@ class RotinasDB:
                 letras_disponiveis.pop(letras_disponiveis.index(letra))
             except:
                 continue
+        
+        if count:
+            return str(len(letras_disponiveis))
         
         if len(letras_disponiveis) > 0:
             if use_and_save:
@@ -217,10 +220,10 @@ if __name__ == "__main__":
 
     # print(procurar_rotinas.ler())
     # print(verificarData(data=datetime.now(), caminho=".TEMP/Datas_Execução.xlsx"))
-    bot = RotinasDB(date=datetime.now()-relativedelta(days=0), ambiente='S4Q')
+    bot = RotinasDB(date=datetime.now()-relativedelta(days=0), ambiente='')
     print(bot.date)
     print(bot.rotinas_letras)
-    print(bot.available(use_and_save=True))
+    print(bot.available(count=True))
     #print(bot.load())
     
     #bot.test()

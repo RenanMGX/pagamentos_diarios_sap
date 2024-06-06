@@ -12,6 +12,7 @@ from typing import Dict
 from time import sleep
 from Entities.crenciais import Credential
 from getpass import getuser
+from typing import Literal
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
@@ -51,6 +52,7 @@ class Preparar:
         self.__fornecedores_c_debitos_txt:str = "lista_fornecedores_c_debitos.txt"
         self.__fornecedores_pgto_T_excel:str = "Lista de Fornecedores.xlsx"
         self.__fornecedores_pgto_T_txt:str = "lista_fornecedores_pgto_T.txt"
+        self.__lista_relacionais:str = "lista_relacionais.txt"
         
         self.__session: win32com.client.CDispatch
         
@@ -85,6 +87,10 @@ class Preparar:
     @property
     def fornecedores_pgto_T_txt(self):
         return self.__fornecedores_pgto_T_txt
+    
+    @property
+    def lista_relacionais(self):
+        return self.__lista_relacionais
         
     def montar_datas(self, datas_execucao:Dict[str,datetime]) -> dict:
         datas_para_retorno:dict = {}
@@ -109,7 +115,7 @@ class Preparar:
         
         return datas_para_retorno
     
-    def conectar_sap(self, *, user:str, password:str) -> bool:
+    def conectar_sap(self, *, user:str, password:str, ambiente:Literal["S4P", "S4Q"]) -> bool:
         try:
             if not self._verificar_sap_aberto():
                 print("abrindo programa SAP")
@@ -119,7 +125,7 @@ class Preparar:
             print("conectando ao SAP")
             SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
             application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
-            connection: win32com.client.CDispatch = application.OpenConnection("S4P", True) # type: ignore
+            connection: win32com.client.CDispatch = application.OpenConnection(ambiente, True) # type: ignore
             self.__session: win32com.client.CDispatch = connection.Children(0)# type: ignore
             
             print("digitando credenciais")
@@ -213,7 +219,13 @@ class Preparar:
 
         self._fechar_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)
         pd.read_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)['Conta'].to_csv(self.path_files + self.fornecedores_pgto_T_txt, header=False, index=False)
-            
+        
+        # self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)  
+        # df_relacionais = pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)
+        # df_relacionais = df_relacionais[df_relacionais['Conta'] >= 1100000]
+        # df_relacionais = df_relacionais['Conta']
+        # df_relacionais.to_csv(self.path_files + self.lista_relacionais, header=False, index=False)
+        
         print("Documentos prontos")
     
     # Preparar os documentos na FBL1N do tipo transferência (T).
@@ -361,7 +373,78 @@ class Preparar:
                 except Exception as error:
                     print(f"          Error! {type(error)} -> {error}")
                     print(traceback.format_exc())
+        sleep(5)
+        
+    # Preparar os documentos na FBL1N do tipo Relacionais.
+    def quinto_preparar_documentos_relacionais(self) -> None:
+        try:
+            self.session
+        except AttributeError:
+            raise Exception("o sap precisa ser conectado primeiro!")
+        
+        print("\nPreparar os documentos na FBL1N Relacionais.\n")
+        for key,value in self.datas.items():
+                print(f"{key} '{value['data_sap']}' -> Executando!")
+                try:
+                    #self.session.findById("wnd[0]").maximize()
+                    
+                    self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
+                    self.session.findById("wnd[0]").sendVKey(0)
+                    self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
+                    self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
+                    self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
+                    for empresa in self.empresas:
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    self.session.findById("wnd[0]/usr/radX_OPSEL").select()
+                    self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
+                    self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
+                    self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"
+                    self.session.findById("wnd[0]/usr/chkX_APAR").selected = "true"
+                    self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""
+                    self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
+                    self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
+                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "RELACIONAIS" # Layout
+                    self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+                    
+                    
+                    if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
+                        print(f"          {aviso_text}")
+                        continue
+                    
+                    #import pdb; pdb.set_trace()
+                    passar:bool = False
+                    for child_object in self.session.findById("wnd[0]/usr/").Children:
+                        if child_object.Text == 'Lista não contém dados':
+                            print(f"          {child_object.Text}")
+                            passar = True
+                    if passar:
+                        continue
+                    
+                    if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+                        raise Exception(error)
+                    
+                    self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
+                    self.session.findById("wnd[0]/tbar[1]/btn[45]").press() # Modificação em massa
+                    sleep(1)
+                    
+                    self.session.findById("wnd[1]/usr/ctxt*BSEG-ZLSCH").text = "T" # altera a forma de pagamento
+                    self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_bmtu'] # Alterar Atribuição para pgto
+                    
+                    
+                    #import pdb;pdb.set_trace()
+                    if self.__em_massa:
+                        self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
+                    else:
+                        self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
+                        
+                    print("          Concluido!")
+                    
+                except Exception as error:
+                    print(f"          Error! {type(error)} -> {error}")
+                    print(traceback.format_exc())
         sleep(5) 
+         
             
     def fechar_sap(self):
         try:
@@ -401,18 +484,20 @@ class Preparar:
             if "saplogon" in process.name().lower():
                 return True
         return False    
-        
+
+               
 if __name__ == "__main__":
     try:
-        crd:dict = Credential("SAP_PRD").load()
+        crd:dict = Credential('SAP_PRD').load()
         
-        bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
+        bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")#, em_massa=False)
         
-        bot.conectar_sap(user=crd['user'], password=crd['password'])
+        bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente='S4P')
         bot.primeiro_extrair_fornecedores_fbl1n()
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
         bot.terceiro_preparar_documentos_tipo_t()
         bot.quarto_preparar_documentos_tipo_b()
+        bot.quinto_preparar_documentos_relacionais()
         
         bot.fechar_sap()
     except Exception as error:

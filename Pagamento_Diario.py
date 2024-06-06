@@ -1,6 +1,7 @@
 from Entities.f110 import F110
 from Entities.log_error import LogError
 from Entities.process import Processos
+#from Entities.rotinas import RotinasDB
 from datetime import datetime
 import traceback
 import sys
@@ -16,7 +17,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setEnabled(True)
-        Dialog.resize(500, 400)
+        Dialog.resize(400, 400)
 
         font = QtGui.QFont()
         font.setKerning(True)
@@ -39,41 +40,49 @@ class Ui_Dialog(object):
         self.w_calendario.setDateEditEnabled(True)
         self.w_calendario.setObjectName("w_calendario")
         
-        altura:int = 180
+        hight_botton:int = 180
+        width_botton:int = 40
         quant_checkbox:int = 0
+        
+        # self.label_quant_letras = QtWidgets.QLabel(Dialog)
+        # self.label_quant_letras.setObjectName("boletos")
+        # self.label_quant_letras.setGeometry(QtCore.QRect(290, 250, 200, 31))
+        # self.label_quant_letras.setAlignment(QtCore.Qt.AlignCenter) # type: ignore
+        # self.label_quant_letras.setText("Quantidade de letras Restantes:\n 17")
+        
         
         self.cb_boletos = QtWidgets.QCheckBox(Dialog)
         self.cb_boletos.setObjectName("boletos")
-        self.cb_boletos.setGeometry(QtCore.QRect(100, (altura + 25), 121, 31))
+        self.cb_boletos.setGeometry(QtCore.QRect(width_botton, (hight_botton + 25), 250, 31))
         self.cb_boletos.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         quant_checkbox += 1
         
         self.cb_consumo = QtWidgets.QCheckBox(Dialog)
         self.cb_consumo.setObjectName("boletos")
-        self.cb_consumo.setGeometry(QtCore.QRect(100, (altura + 50), 121, 31))
+        self.cb_consumo.setGeometry(QtCore.QRect(width_botton, (hight_botton + 50), 250, 31))
         self.cb_consumo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         quant_checkbox += 1
         
         self.cb_imposto = QtWidgets.QCheckBox(Dialog)
         self.cb_imposto.setObjectName("imposto")
-        self.cb_imposto.setGeometry(QtCore.QRect(100, (altura + 75), 121, 31))
+        self.cb_imposto.setGeometry(QtCore.QRect(width_botton, (hight_botton + 75), 250, 31))
         self.cb_imposto.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         quant_checkbox += 1
         
         self.cb_darfs = QtWidgets.QCheckBox(Dialog)
         self.cb_darfs.setObjectName("DARFS, impostos Federais.")
-        self.cb_darfs.setGeometry(QtCore.QRect(100, (altura + 100), 250, 31))
+        self.cb_darfs.setGeometry(QtCore.QRect(width_botton, (hight_botton + 100), 250, 31))
         self.cb_darfs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         quant_checkbox += 1
         
         self.cb_relacionais = QtWidgets.QCheckBox(Dialog)
         self.cb_relacionais.setObjectName("Relacionais")
-        self.cb_relacionais.setGeometry(QtCore.QRect(100, (altura + 125), 250, 31))
+        self.cb_relacionais.setGeometry(QtCore.QRect(width_botton, (hight_botton + 125), 250, 31))
         self.cb_relacionais.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor)) #type: ignore
         quant_checkbox += 1
         
         self.bt_iniciar = QtWidgets.QPushButton(Dialog)
-        self.bt_iniciar.setGeometry(QtCore.QRect(130, (altura + (quant_checkbox * 25) + 40), 121, 31))
+        self.bt_iniciar.setGeometry(QtCore.QRect(140, (hight_botton + (quant_checkbox * 25) + 40), 121, 31))
         self.bt_iniciar.setObjectName("bt_iniciar")
         self.bt_iniciar.clicked.connect(self.retornar_data)
         
@@ -86,11 +95,12 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", f"Pagamentos Diarios - {version}"))
         self.bt_iniciar.setText(_translate("Dialog", "Iniciar"))
-        self.cb_boletos.setText(_translate("Dialog", "Boletos"))
-        self.cb_consumo.setText(_translate("Dialog", "Consumo"))
-        self.cb_imposto.setText(_translate("Dialog", "Imposto"))
-        self.cb_darfs.setText(_translate("Dialog", "DARFS, impostos Federais"))
-        self.cb_relacionais.setText(_translate("Dialog", "Relacionais"))
+        
+        self.cb_boletos.setText(_translate("Dialog", "Boletos - Consome 2 letras"))
+        self.cb_consumo.setText(_translate("Dialog", "Consumo - Consome 1 letra"))
+        self.cb_imposto.setText(_translate("Dialog", "Imposto - Consome 1 letra"))
+        self.cb_darfs.setText(_translate("Dialog", "DARFS, impostos Federais - Consome 1 letra"))
+        self.cb_relacionais.setText(_translate("Dialog", "Relacionais - Consome 1 letra"))
 
     def retornar_data(self):
         calendar_date = self.w_calendario.selectedDate()
@@ -106,7 +116,8 @@ class Ui_Dialog(object):
 if __name__ == "__main__":
     date = Date()
     processo = Processos()
-    version = "v1.5"
+    
+    version = "v1.6"
     
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
