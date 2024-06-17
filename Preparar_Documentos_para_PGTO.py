@@ -465,19 +465,22 @@ class Preparar:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
     
     def _fechar_excel(self, file_name:str, *, timeout:int=15) -> None:
-        if "/" in file_name:
-            file_name = file_name.split("/")[-1]
-        if "\\" in file_name:
-            file_name = file_name.split("\\")[-1]
-        for _ in range(timeout):
-            for app in xw.apps:
-                for open_file in app.books:
-                    if file_name.lower() == open_file.name.lower():
-                        open_file.close()
-                        if len(xw.apps) <= 0:
-                            app.kill()
-                        return
-            sleep(1)
+        try:
+            if "/" in file_name:
+                file_name = file_name.split("/")[-1]
+            if "\\" in file_name:
+                file_name = file_name.split("\\")[-1]
+            for _ in range(timeout):
+                for app in xw.apps:
+                    for open_file in app.books:
+                        if file_name.lower() == open_file.name.lower():
+                            open_file.close()
+                            if len(xw.apps) <= 0:
+                                app.kill()
+                            return
+                sleep(1)
+        except:
+            print("não foi possivel encerrar o excel")
         
     def _verificar_sap_aberto(self) -> bool:
         for process in psutil.process_iter(['name']):

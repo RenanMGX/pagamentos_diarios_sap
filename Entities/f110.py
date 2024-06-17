@@ -528,21 +528,24 @@ class F110:
         return True # retorna 
     
     def _fechar_excel(self, file_name:str, timeout:int=10) -> bool:
-        if "/" in file_name:
-            file_name = file_name.split("/")[-1]
-        if "\\" in file_name:
-            file_name = file_name.split("\\")[-1]
-        for _ in range(timeout):
-            for app in xw.apps:
-                for open_app in app.books:
-                    if open_app.name.lower() == file_name.lower():
-                        open_app.close()
-                        if len(xw.apps) <= 0:
-                            app.kill()
-                        return True
-            sleep(1)
-        return False
-                    
+        try:
+            if "/" in file_name:
+                file_name = file_name.split("/")[-1]
+            if "\\" in file_name:
+                file_name = file_name.split("\\")[-1]
+            for _ in range(timeout):
+                for app in xw.apps:
+                    for open_app in app.books:
+                        if open_app.name.lower() == file_name.lower():
+                            open_app.close()
+                            if len(xw.apps) <= 0:
+                                app.kill()
+                            return True
+                sleep(1)
+            return False
+        except:
+            print("não foi possivel encerrar o excel")
+            return False
     
     def test(self):
         print("testando F110.py")
