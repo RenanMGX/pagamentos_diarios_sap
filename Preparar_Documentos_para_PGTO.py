@@ -137,7 +137,9 @@ class Preparar:
             return True
         except Exception as error:
             raise ConnectionError(f"não foi possivel se conectar ao SAP motivo: {type(error).__class__} -> {error}")
-    
+
+
+ 
     # Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO    
     def primeiro_extrair_fornecedores_fbl1n(self) -> None:
         try:
