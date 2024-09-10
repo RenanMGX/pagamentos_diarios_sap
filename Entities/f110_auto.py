@@ -306,7 +306,7 @@ class F110Auto(SAPManipulation):
                     except Exception as error:
                         msg_inicio_error = error
                 if not passou_inicio:
-                    raise Exception(msg_inicio_error)
+                    raise Exception(f"{empresa+rotina} - {msg_inicio_error}")
 
                 CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4])
 
@@ -331,7 +331,7 @@ class F110Auto(SAPManipulation):
                         try:
                             self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = empresa
                         except:
-                            raise Exception(f"o codigo '{rotina}' já foi utilizado para esta empresa")
+                            raise Exception(f"o codigo '{rotina}' já foi utilizado para a empresa {empresa}")
                         
                     elif "[1,0]" in child_object.Id:
                         self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = pagamento
@@ -427,7 +427,7 @@ class F110Auto(SAPManipulation):
                     CAMPOS_ADVERTENCIA = self.buscar_campo("wnd[2]/usr/")
                     if (texto_advertencia:=self.session.findById(CAMPOS_ADVERTENCIA[1]).Text.lower()) != "":
                         self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                        raise Exception(texto_advertencia)
+                        raise Exception(f"{empresa+rotina} - {texto_advertencia}")
                         #print(f"               {texto_advertencia} {empresa + rotina}")
 
                 CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
@@ -457,7 +457,7 @@ class F110Auto(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
                     if num > (limite-2):
-                        raise TimeoutError("não foi possivel identificar se a Proposta de Pagamento foi criada!")                    
+                        raise TimeoutError(f"{empresa+rotina} - não foi possivel identificar se a Proposta de Pagamento foi criada!")                    
                     
                     
 
@@ -481,7 +481,7 @@ class F110Auto(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
                     if num > (limite-2):
-                        raise TimeoutError("não foi possivel identificar se o Programa de pagamento foi executado ")                    
+                        raise TimeoutError(f"{empresa+rotina} - não foi possivel identificar se o Programa de pagamento foi executado")                    
                     
 
                 print(f"    Concluido:     {empresa+rotina}")
@@ -493,7 +493,7 @@ class F110Auto(SAPManipulation):
                 self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:
                 print(f"    Error: {empresa+rotina} == {error}")
-                self.log_error.register(tipo=type(error), descri=str(error), trace=traceback.format_exc())
+                self.log_error.register(tipo=type(error), descri=str(f"    Error: {empresa+rotina} == {error}"), trace=traceback.format_exc())
 
     def _extrair_relatorio(self) -> bool:
         
