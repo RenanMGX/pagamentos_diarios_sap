@@ -99,7 +99,7 @@ if __name__ == "__main__":
                     execute_program = True
                 
                 if not execute_program:
-                    raise Exception("dia não permitido para execução do script")
+                    raise Exception(f"a data selecionada {date} não é permitida para execução do script")
             
             bot = PagamentosDiariosAuto(
                 user=crd['user'],

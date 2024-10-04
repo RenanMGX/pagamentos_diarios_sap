@@ -110,9 +110,9 @@ class Preparar:
                         "data_sap_imposto" : value.strftime('%d.%m.%Y J')                        
                     }
                 else:
-                    LogError.informativo(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
+                    print(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
             else:
-                LogError.informativo(f"a data selecionada {value.strftime('%d.%m.%Y')} não permitida")
+                print(f"a data selecionada {value.strftime('%d.%m.%Y')} não permitida")
         
         return datas_para_retorno
     
