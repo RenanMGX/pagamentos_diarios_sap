@@ -8,6 +8,9 @@
 *files2
 *db_credencial.py
 *logs
+*django_argv.json
+*informativo_pgmt_diario.json
+*informativo.json
 
 
 

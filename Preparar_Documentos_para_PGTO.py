@@ -13,6 +13,7 @@ from time import sleep
 from Entities.crenciais import Credential
 from getpass import getuser
 from typing import Literal
+from Entities.log_error import LogError
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
@@ -109,9 +110,9 @@ class Preparar:
                         "data_sap_imposto" : value.strftime('%d.%m.%Y J')                        
                     }
                 else:
-                    print(f"{value.strftime('%d.%m.%Y')=}: final de semana")
+                    LogError.informativo(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
             else:
-                print(f"{value.strftime('%d.%m.%Y')=}: data não permitida")
+                LogError.informativo(f"a data selecionada {value.strftime('%d.%m.%Y')} não permitida")
         
         return datas_para_retorno
     

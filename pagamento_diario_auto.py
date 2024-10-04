@@ -11,6 +11,8 @@ from dateutil.relativedelta import relativedelta
 from time import sleep
 from typing import List,Literal,Dict
 import pandas as pd
+import json
+import sys
 
 class PagamentosDiariosAuto(F110Auto):
     def __init__(self, *,user:str, password:str, ambiente:str, date:datetime) -> None:
@@ -24,26 +26,70 @@ class PagamentosDiariosAuto(F110Auto):
 
 
 if __name__ == "__main__":
+    LogError.informativo_path = os.path.join(os.getcwd(), 'informativo_pgmt_diario.json')
+    
+    if os.path.exists(LogError.informativo_path):
+        os.unlink(LogError.informativo_path)
     for _ in range(1):
         try:
             param:dict = {
                 "qas" : ["S4Q","SAP_QAS"],
-                "prd" :  ["S4P", "SAP_PRD"]
-            }           
-            choose_param:Literal["qas", "prd"] = 'prd' #alterar entrada e ambiente SAP
+                "prd" :  ["S4P", "SAP_PRD"],
+                "django": ["S4P", "SAP_PRD"],
+            }
             
-            print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA\n{'#'*100}")
+            processos:Processos = Processos()
+                    
+            choose_param:Literal["qas", "prd", "django"] = 'prd' #alterar entrada e ambiente SAP
+            
+            django_argv_path = 'django_argv.json'
+            if os.path.exists(django_argv_path):
+                try:
+                    LogError.informativo("iniciando via Django")
+                    
+                    with open(django_argv_path, 'r', encoding='utf-8')as _file:
+                        argvs:dict = json.load(_file)
+                    
+                    os.unlink(django_argv_path)    
+                    
+                    if argvs.get('date'):
+                        date = datetime.strptime(str(argvs.get('date')), '%Y-%m-%d')
+                        
+                    if argvs.get('boleto'):
+                        processos.boleto = bool(argvs.get('boleto'))
+                    else:
+                        processos.boleto = True
+                        
+                    if argvs.get('consumo'):
+                        processos.consumo = bool(argvs.get('consumo'))
+                    else:
+                        processos.consumo = True
+                        
+                    if argvs.get('imposto'):
+                        processos.imposto = bool(argvs.get('imposto'))
+                    else:
+                        processos.imposto = True
+                        
+                    if argvs.get('darfs'):
+                        processos.darfs = bool(argvs.get('darfs'))
+                    else:
+                        processos.darfs = True
+                    
+                    choose_param = 'django'
+                except Exception as err:
+                    LogError.informativo(str(traceback.format_exc()))
+                    sys.exit()
+                
+            else:
+                date:datetime = datetime.now()
+                date = date.replace(hour=0,minute=0,second=0,microsecond=0)
+                date = (date + relativedelta(days=1)) if choose_param == "prd" else (date - relativedelta(days=10))
+            
+            print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
                 
                             
             crd:dict = Credential(param[choose_param][1]).load()
-            processos:Processos = Processos()
             
-            date:datetime = datetime.now()
-            date = date.replace(hour=0,minute=0,second=0,microsecond=0)
-            date = (date + relativedelta(days=1)) if choose_param == "prd" else (date + relativedelta(days=0))
-            
-            
-            print(date)
 
             preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
 
@@ -71,7 +117,12 @@ if __name__ == "__main__":
                 processos.darfs = True
                 processos.relacionais = True  
                 
-                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True)#, empresas_separada=["N000"])
+                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
+            
+            
+            elif choose_param == 'django':
+                bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+                
             else: # ==== "prd"
                 processos.boleto = True
                 processos.consumo = True
@@ -79,9 +130,11 @@ if __name__ == "__main__":
                 processos.darfs = True
                 processos.relacionais = True  
                 bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+                
+            LogError.informativo("Automação Finalizada com Sucesso!")
         
         except Exception as error:
-            print(error)
+            LogError.informativo(str(error))
             path:str = "logs/"
             if not os.path.exists(path):
                 os.makedirs(path)

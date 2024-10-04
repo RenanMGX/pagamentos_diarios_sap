@@ -4,8 +4,11 @@ from getpass import getuser
 from time import sleep
 from datetime import datetime
 import traceback
+import json
 
 class LogError:
+    informativo_path = ""
+    
     def __init__(self, file:str="log_error.csv") -> None:
         '''
         construtur da classe define o caminho do arquivo e cria caso ele não exista
@@ -45,6 +48,24 @@ class LogError:
             except PermissionError:
                 print(f"Feche o arquivo {self.__path} para que o registro seja feito")
                 sleep(1)
+    
+    @staticmethod            
+    def informativo(text:str):
+        text = f"{datetime.now().strftime("[%d/%m/%Y - %H:%M:%S] ->  ")} {text}"
+        print(text)
+        if not LogError.informativo_path:
+            return
+        if not os.path.exists(LogError.informativo_path):
+            with open(LogError.informativo_path, 'w', encoding='utf-8') as _file:
+                json.dump([], _file)
+        with open(LogError.informativo_path, 'r', encoding='utf-8') as _file:
+            lista:list = json.load(_file)
+        
+        lista.append(text)
+        
+        with open(LogError.informativo_path, 'w', encoding='utf-8') as _file:
+            json.dump(lista, _file)
+        
 
 if __name__ == "__main__":
     log_error = LogError(file="test.csv")

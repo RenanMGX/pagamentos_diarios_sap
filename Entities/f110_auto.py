@@ -53,14 +53,14 @@ class F110Auto(SAPManipulation):
     def mostrar_datas(self):
         """mostra todas as datas que serão preenchidas pelo programa
         """
-        print(f"\n{'-'*20}Datas{'-'*20}")
-        print(f"{self.__data_sap=}")
-        print(f"{self.__data_sap_atribuicao=}")
-        print(f"{self.__data_sap_atribuicao2=}")
-        print(f"{self.__data_sap_atribuicao3=}")
-        print(f"{self.__data_sap_atribuicao4=}")
-        print(f"{self.__data_proximo_dia=}")
-        print(f"{'-'*45}\n")
+        LogError.informativo(f"\n{'-'*20}Datas{'-'*20}")
+        LogError.informativo(f"{self.__data_sap=}")
+        LogError.informativo(f"{self.__data_sap_atribuicao=}")
+        LogError.informativo(f"{self.__data_sap_atribuicao2=}")
+        LogError.informativo(f"{self.__data_sap_atribuicao3=}")
+        LogError.informativo(f"{self.__data_sap_atribuicao4=}")
+        LogError.informativo(f"{self.__data_proximo_dia=}")
+        LogError.informativo(f"{'-'*45}\n")
         # if not verificarData(self.__data_atual, caminho=".TEMP/Datas_Execução.xlsx"):
         #     raise Warning(f"está data não é permitida '{self.__data_sap}'")
 
@@ -101,10 +101,10 @@ class F110Auto(SAPManipulation):
         """
         if self._verificar_conexao() == False:
             self._limpar_cache_sap()
-            print("não foi possivel se conectar ao SAP\n")
+            LogError.informativo("não foi possivel se conectar ao SAP\n")
             return False
         else:
-            print("conexão com o SAP estabelecida\n")
+            LogError.informativo("conexão com o SAP estabelecida\n")
             return True
 
     def listar(self, campo:str) -> None:
@@ -151,6 +151,7 @@ class F110Auto(SAPManipulation):
 
     @SAPManipulation.usar_sap
     def iniciar(self, processo:Processos, empresas_separada:list=[], fechar_sap_no_final:bool=False, salvar_letra:bool=True) -> None:
+        LogError.informativo("iniciando checagem das letras")
         if not isinstance(processo, Processos):
             raise TypeError("apenas objeto do tipo Processos Permitido")
         if not isinstance(empresas_separada, list):
@@ -182,15 +183,20 @@ class F110Auto(SAPManipulation):
                 lista_ralacionais = [x for x in lista_ralacionais if x is not None]
                 
             else:
-                print("sem relatorio")
+                LogError.informativo("sem relatorio")
                 return
         else:
             lista = empresas_separada
             lista_ralacionais = empresas_separada
 
+        LogError.informativo("relatorio da FBL1N terminado")
         #lista: list = ['N000']
         #print(lista)
         #rotinas: list = procurar_rotinas.proxima_rotina()
+        LogError.informativo("Iniciando lançamento de pagamantos na F110")
+        
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Boletos")
+        #boletos
         if processo.boleto:
             self._SAP_OP(
                 lista_empresas=lista,
@@ -213,6 +219,8 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "PAGTO_BRADESCO"
             )
         
+        
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Consumo")
         #pagamento O
         if processo.consumo:
             self._SAP_OP(
@@ -225,6 +233,7 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
         
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Imposto")
         #pagamento J
         if processo.imposto:
             self._SAP_OP(
@@ -236,7 +245,8 @@ class F110Auto(SAPManipulation):
                 pagamento="J",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
-            
+           
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Darfs")
         #pagamento I
         if processo.darfs:
             self._SAP_OP(
@@ -249,6 +259,7 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
             
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Relacionais")
         #pagamento Relacionais
         if processo.relacionais:
             self._SAP_OP(
@@ -280,10 +291,11 @@ class F110Auto(SAPManipulation):
         Parameters:
         lista_empresas (list) : Lista das empresas que serão executadas
         '''
-        if not isinstance(lista_empresas, list):
-            print("apenas listas")
-            return None
         
+        if not isinstance(lista_empresas, list):
+            LogError.informativo("apenas listas")
+            return None
+                
         for empresa in lista_empresas:
             try:
                 self.session.findById("wnd[0]").maximize ()
@@ -314,7 +326,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
 
                 if (texto_aviso1:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa} == {texto_aviso1}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso1}")
                     #raise Exception(texto_aviso1)
 
                 
@@ -348,7 +360,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[2]).select()
 
                 if (texto_aviso2:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa} == {texto_aviso2}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso2}")
                     #raise Exception(texto_aviso2)
 
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_ABAS[2])
@@ -385,7 +397,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
                 if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa} == {texto_aviso3}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso3}")
                     #raise Exception(texto_aviso3)
 
                 CAMPOS_F110_LOG = self.buscar_campo(CAMPOS_F110_ABAS[3])
@@ -403,7 +415,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[4]).select()
 
                 if (texto_aviso4:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    print(f"    Aviso: {empresa} == {texto_aviso4}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso4}")
                     #raise Exception(texto_aviso4)
 
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
@@ -484,18 +496,19 @@ class F110Auto(SAPManipulation):
                         raise TimeoutError(f"{empresa+rotina} - não foi possivel identificar se o Programa de pagamento foi executado")                    
                     
 
-                print(f"    Concluido:     {empresa+rotina}")
+                LogError.informativo(f"    Concluido:     {empresa+rotina}")
                 self.log_error.register(tipo="Concluido", descri=str(empresa+rotina), trace="")
 
             except IndexError as error:
-                print(f"    Error: {empresa} == Empresa {empresa+rotina} não existe na tabela T001 - {error}")
+                LogError.informativo(f"    Error: {empresa} == Empresa {empresa+rotina} não existe na tabela T001 - {error}")
                 print()
                 self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:
-                print(f"    Error: {empresa+rotina} == {error}")
+                LogError.informativo(f"    Error: {empresa+rotina} == {error}")
                 self.log_error.register(tipo=type(error), descri=str(f"    Error: {empresa+rotina} == {error}"), trace=traceback.format_exc())
 
     def _extrair_relatorio(self) -> bool:
+        LogError.informativo("extraindo relatarios das empresas na FBL1N")
         
         ###########   INICIO
         self.session.findById("wnd[0]").maximize() # Maximiza
@@ -531,7 +544,7 @@ class F110Auto(SAPManipulation):
 
         try: # veifica se tem algum formulario para ser exibido caso contrario encerra o roteiro
             if self.session.findById('/app/con[0]/ses[0]/wnd[0]/sbar').Text == "Nenhuma partida selecionada (ver texto descritivo)":
-                print("Nenhuma partida selecionada (ver texto descritivo)")
+                LogError.informativo("Nenhuma partida selecionada (ver texto descritivo)")
                 return False
         except:
             pass
@@ -572,11 +585,11 @@ class F110Auto(SAPManipulation):
                 sleep(1)
             return False
         except:
-            print("não foi possivel encerrar o excel")
+            LogError.informativo("não foi possivel encerrar o excel")
             return False
     
     def test(self):
-        print("testando F110.py")
+        LogError.informativo("testando F110.py")
         
 
 if __name__ == "__main__":
