@@ -121,7 +121,7 @@ class Preparar:
     def __verificar_conections(f):
         @wraps(f)
         def wrap(self, *args, **kwargs):
-            _self:SAPManipulation = self
+            _self:Preparar = self
             
             result = f(_self, *args, **kwargs)
             try:
