@@ -4,6 +4,7 @@ from datetime import datetime
 import psutil
 import subprocess
 from time import sleep
+from functools import wraps
 
 class SAPManipulation():
     @property
@@ -43,7 +44,6 @@ class SAPManipulation():
     
     @staticmethod
     def __verificar_conections(f):
-        @wraps(f)
         def wrap(self, *args, **kwargs):
             _self:SAPManipulation = self
             
