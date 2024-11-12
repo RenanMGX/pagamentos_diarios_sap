@@ -149,7 +149,7 @@ class F110Auto(SAPManipulation):
             lista.append(child_object.Id.replace("/app/con[0]/ses[0]/", ""))
         return lista
 
-    @SAPManipulation.usar_sap
+    @SAPManipulation.start_SAP
     def iniciar(self, processo:Processos, empresas_separada:list=[], fechar_sap_no_final:bool=False, salvar_letra:bool=True) -> None:
         LogError.informativo("iniciando checagem das letras")
         if not isinstance(processo, Processos):

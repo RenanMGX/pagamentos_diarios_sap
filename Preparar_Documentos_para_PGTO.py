@@ -15,6 +15,7 @@ from getpass import getuser
 from typing import Literal
 from Entities.log_error import LogError
 from functools import wraps
+from Entities.dependencies.sap import SAPManipulation
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
