@@ -83,7 +83,7 @@ if __name__ == "__main__":
             else:
                 date:datetime = datetime.now()
                 date = date.replace(hour=0,minute=0,second=0,microsecond=0)
-                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=10))
+                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=11))
             
             print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
                 

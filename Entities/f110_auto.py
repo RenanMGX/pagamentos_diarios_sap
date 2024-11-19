@@ -205,7 +205,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                banco_pagamento = "PAGTO_BRADESCO"
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
                 #rotina=rotinas["primeira"]
             )
 
@@ -216,7 +216,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao2,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                banco_pagamento = "PAGTO_BRADESCO"
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
             )
         
         
@@ -269,7 +269,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento="BMTU",
-                banco_pagamento = "PAGTO_BRADESCO",
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
                 relacionais=True
             )
             
@@ -283,7 +283,7 @@ class F110Auto(SAPManipulation):
             data_sap_atribuicao: str,
             rotina: str,
             pagamento:Literal["BMTU", "O", "J", "I"],
-            banco_pagamento:Literal["PAGTO_BRADESCO", "BRADESCO_TRIBU"],
+            banco_pagamento:str|list,
             relacionais:bool = False
     ) -> None:
         '''
@@ -421,8 +421,12 @@ class F110Auto(SAPManipulation):
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_IMPRESS[0])
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_IMPRESS[1])
-
-                self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento #Banco
+                
+                if isinstance(banco_pagamento, list):
+                    self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento[0] #Banco
+                    self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[2,2]").text = banco_pagamento[1] #Banco
+                else:
+                    self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento #Banco
 
                 self.session.findById("wnd[0]/tbar[0]/btn[11]").press () # Gravar Parâmetros
                 self.session.findById("wnd[0]/tbar[0]/btn[3]").press ()
