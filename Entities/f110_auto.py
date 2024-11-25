@@ -205,7 +205,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = "PAGTO_BRADESCO"
                 #rotina=rotinas["primeira"]
             )
 
@@ -216,7 +217,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao2,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = "PAGTO_BRADESCO"
             )
         
         
@@ -269,7 +271,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento="BMTU",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = "PAGTO_BRADESCO",
                 relacionais=True
             )
             
@@ -424,7 +427,8 @@ class F110Auto(SAPManipulation):
                 
                 if isinstance(banco_pagamento, list):
                     self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento[0] #Banco
-                    self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[2,2]").text = banco_pagamento[1] #Banco
+                    if len(banco_pagamento) == 2:
+                        self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[2,2]").text = banco_pagamento[1] #Banco
                 else:
                     self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento #Banco
 
