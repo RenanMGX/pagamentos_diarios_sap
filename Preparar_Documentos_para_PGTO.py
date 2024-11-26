@@ -16,6 +16,7 @@ from typing import Literal
 from Entities.log_error import LogError
 from functools import wraps
 from Entities.dependencies.sap import SAPManipulation
+from Entities.dependencies.logs import Logs
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
@@ -143,6 +144,7 @@ class Preparar:
                 sleep(5)
             
             print("conectando ao SAP")
+
             SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
             application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
             connection: win32com.client.CDispatch = application.OpenConnection(ambiente, True) # type: ignore
@@ -316,16 +318,17 @@ class Preparar:
                     if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
                         raise Exception(error)
                     
+                    
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press() # Modificação em massa
                     sleep(1)
                     self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao'] # Alterar Atribuição para pgto
-                    
+                    #import pdb;pdb.set_trace()
                     if self.__em_massa:
-                        self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
+                        self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
                     else:
                         self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
-                        
+                    #import pdb;pdb.set_trace()
                     print("          Concluido!")
                     
                 except Exception as error:
@@ -380,7 +383,8 @@ class Preparar:
                     
                     if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
                         raise Exception(error)
-                
+
+                    #import pdb;pdb.set_trace()
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press () # Modificação em massa
                     self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao']  # Alterar Atribuição para pgto
@@ -389,7 +393,7 @@ class Preparar:
                         self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
                     else:
                         self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
-                        
+                    #import pdb;pdb.set_trace()    
                     print("          Concluido!")
                     
                 except Exception as error:
@@ -459,7 +463,7 @@ class Preparar:
                         self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
                     else:
                         self.session.findById("wnd[1]/tbar[0]/btn[12]").press() ### fechar e não executar em massa
-                        
+                    #import pdb;pdb.set_trace()    
                     print("          Concluido!")
                     
                 except Exception as error:
@@ -517,7 +521,7 @@ if __name__ == "__main__":
         
         bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")#, em_massa=False)
         
-        bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente='S4P')
+        bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente=crd['ambiente'])
         bot.primeiro_extrair_fornecedores_fbl1n()
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
         bot.terceiro_preparar_documentos_tipo_t()
@@ -526,13 +530,5 @@ if __name__ == "__main__":
         
         bot.fechar_sap()
     except Exception as error:
-        path = "logs\\"
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-        
-        file = f"{path}log_error_{datetime.now().strftime('%d%m%Y%H%M%S')}"
-        with open(file, 'w', encoding='utf-8')as _file:
-            _file.write(str(traceback.format_exc()))
-    
-        raise error        
+        Logs(name="Preparar Documento para Pagamento Diario").register(status='Error', description=str(error), exception=traceback.format_exc())
         

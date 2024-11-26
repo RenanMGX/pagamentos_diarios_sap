@@ -18,7 +18,7 @@ class Credential:
     def path(self):
         return self.__path
     
-    def __init__(self, name_file:Literal["SAP_QAS-Renan", "SAP_QAS"]|str, ) -> None:
+    def __init__(self, name_file:Literal["SAP_QAS-Renan", "SAP_QAS", "SAP_PRD"]|str, ) -> None:
         name:str = str(name_file)
         if not isinstance(Credential.path_raiz, str):
             raise TypeError("apenas strings")
@@ -127,6 +127,6 @@ class Credential:
         return self.criar_cifra(text, -key)
         
 if __name__ == "__main__":
-    crd = Credential('SAP_PRD')
+    crd = Credential('SAP_QAS')
     
     print(crd.load())
