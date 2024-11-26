@@ -517,6 +517,7 @@ class Preparar:
                
 if __name__ == "__main__":
     try:
+        agora = datetime.now()
         crd:dict = Credential('SAP_PRD').load()
         
         bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")#, em_massa=False)
@@ -529,6 +530,7 @@ if __name__ == "__main__":
         bot.quinto_preparar_documentos_relacionais()
         
         bot.fechar_sap()
+        Logs(name="Preparar Documento para Pagamento Diario").register(status='Concluido', description=f"Automação concluida em {datetime.now() - agora}")
     except Exception as error:
         Logs(name="Preparar Documento para Pagamento Diario").register(status='Error', description=str(error), exception=traceback.format_exc())
         
