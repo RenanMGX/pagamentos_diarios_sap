@@ -19,7 +19,7 @@ from Entities.dependencies.sap import SAPManipulation
 from Entities.dependencies.logs import Logs
 
 class Preparar:
-    def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True) -> None:
+    def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True, dias:int=8) -> None:
         if not isinstance(date, datetime):
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
@@ -27,16 +27,15 @@ class Preparar:
         self.empresas:list = ["*"]
         self.__em_massa:bool = em_massa
         
-        dias_execucao: Dict[str,datetime] = {
+        dias_execucao:Dict[str,datetime] = {
             "dia_1" : now,
-            "dia_2" : now + relativedelta(days=1),
-            "dia_3" : now + relativedelta(days=2),
-            "dia_4" : now + relativedelta(days=3),
-            "dia_5" : now + relativedelta(days=4),
-            "dia_6" : now + relativedelta(days=5),
-            "dia_7" : now + relativedelta(days=6),
-            "dia_8" : now + relativedelta(days=7)
         }
+        
+        if dias > 1:
+            for dia in range(dias):
+                dias_execucao[f'dia_{dia+2}'] = now + relativedelta(days=(dia + 1))
+        
+        
         
         if not os.path.exists(arquivo_datas):
             raise FileNotFoundError(f"{arquivo_datas=} não foi encontrado!")
@@ -423,6 +422,7 @@ class Preparar:
                         self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select()
+                    self.session.findById("wnd[0]/usr/radX_AISEL").select()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
                     self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
                     self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"
@@ -432,7 +432,7 @@ class Preparar:
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "RELACIONAIS" # Layout
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
-                    
+
                     
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
                         print(f"          {aviso_text}")
@@ -457,8 +457,6 @@ class Preparar:
                     self.session.findById("wnd[1]/usr/ctxt*BSEG-ZLSCH").text = "T" # altera a forma de pagamento
                     self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_bmtu'] # Alterar Atribuição para pgto
                     
-                    
-                    #import pdb;pdb.set_trace()
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
                     else:
@@ -520,7 +518,14 @@ if __name__ == "__main__":
         agora = datetime.now()
         crd:dict = Credential('SAP_PRD').load()
         
-        bot:Preparar = Preparar(date=datetime.now(), arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")#, em_massa=False)
+        date = datetime.now()
+                
+        bot:Preparar = Preparar(
+            date=date,
+            arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx",
+            dias=1
+            #em_massa=False
+        )
         
         bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente=crd['ambiente'])
         bot.primeiro_extrair_fornecedores_fbl1n()
@@ -532,5 +537,6 @@ if __name__ == "__main__":
         bot.fechar_sap()
         Logs(name="Preparar Documento para Pagamento Diario").register(status='Concluido', description=f"Automação concluida em {datetime.now() - agora}")
     except Exception as error:
+        print(traceback.format_exc())
         Logs(name="Preparar Documento para Pagamento Diario").register(status='Error', description=str(error), exception=traceback.format_exc())
         
