@@ -59,6 +59,7 @@ class Preparar:
         
         self.__session: win32com.client.CDispatch
         
+        
     @property
     def path_files(self):
         return self.__path_files
@@ -523,7 +524,7 @@ if __name__ == "__main__":
         bot:Preparar = Preparar(
             date=date,
             arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx",
-            dias=1
+            #dias=1
             #em_massa=False
         )
         
