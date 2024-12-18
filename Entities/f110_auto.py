@@ -271,8 +271,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento="BMTU",
-                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
-                banco_pagamento = "PAGTO_BRADESCO",
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = "PAGTO_BRADESCO",
                 relacionais=True
             )
             
