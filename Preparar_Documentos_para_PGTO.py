@@ -238,11 +238,11 @@ class Preparar:
         if not os.path.exists(caminho_fornecedores_pgto_T):
             raise NotADirectoryError(f"{caminho_fornecedores_pgto_T=} caminho não encontrado!")
         
-        self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)
-        pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)['Conta'].to_csv(self.path_files + self.fornecedores_c_debitos_txt, header=False, index=False)
+        # self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)
+        # pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)['Conta'].to_csv(self.path_files + self.fornecedores_c_debitos_txt, header=False, index=False)
 
         self._fechar_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)
-        pd.read_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)['Conta'].to_csv(self.path_files + self.fornecedores_pgto_T_txt, header=False, index=False)
+        pd.read_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)['Conta'].drop_duplicates().to_csv(self.path_files + self.fornecedores_pgto_T_txt, header=False, index=False)
         
         # self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)  
         # df_relacionais = pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)
@@ -270,19 +270,9 @@ class Preparar:
                     self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
                     self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").press()
                     self.session.findById("wnd[1]/tbar[0]/btn[23]").press()
-                    self.session.findById("wnd[2]/usr/ctxtDY_PATH").setFocus()
-                    self.session.findById("wnd[2]/usr/ctxtDY_PATH").caretPosition = 0
                     self.session.findById("wnd[2]").sendVKey (4)
                     self.session.findById("wnd[3]/usr/ctxtDY_PATH").text = self.path_files + self.__fornecedores_pgto_T_txt
-                    self.session.findById("wnd[3]/usr/ctxtDY_PATH").setFocus()
-                    self.session.findById("wnd[3]/usr/ctxtDY_PATH").caretPosition = 151
                     self.session.findById("wnd[3]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpNOSV").select()
-                    self.session.findById("wnd[1]/tbar[0]/btn[23]").press()
-                    self.session.findById("wnd[2]/usr/ctxtDY_PATH").text = self.path_files + self.__fornecedores_c_debitos_txt
-                    self.session.findById("wnd[2]/usr/ctxtDY_PATH").setFocus()
-                    self.session.findById("wnd[2]/usr/ctxtDY_PATH").caretPosition = 154
                     self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
@@ -300,7 +290,6 @@ class Preparar:
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "TRANSFER" # Layout
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
-                    
                     
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
                         print(f"          {aviso_text}")
@@ -516,7 +505,6 @@ class Preparar:
                
 if __name__ == "__main__":
     try:
-        agora = datetime.now()
         crd:dict = Credential('SAP_PRD').load()
         
         date = datetime.now()
@@ -529,14 +517,14 @@ if __name__ == "__main__":
         )
         
         bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente=crd['ambiente'])
-        bot.primeiro_extrair_fornecedores_fbl1n()
+        
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
         bot.terceiro_preparar_documentos_tipo_t()
         bot.quarto_preparar_documentos_tipo_b()
         bot.quinto_preparar_documentos_relacionais()
         
         bot.fechar_sap()
-        Logs(name="Preparar Documento para Pagamento Diario").register(status='Concluido', description=f"Automação concluida em {datetime.now() - agora}")
+        Logs(name="Preparar Documento para Pagamento Diario").register(status='Concluido', description=f"Automação concluida em {datetime.now() - date}")
     except Exception as error:
         print(traceback.format_exc())
         Logs(name="Preparar Documento para Pagamento Diario").register(status='Error', description=str(error), exception=traceback.format_exc())
