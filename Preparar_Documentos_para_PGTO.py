@@ -402,42 +402,68 @@ class Preparar:
                 print(f"{key} '{value['data_sap']}' -> Executando!")
                 try:
                     #self.session.findById("wnd[0]").maximize()
-                    
-                    self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
-                    self.session.findById("wnd[0]").sendVKey(0)
-                    self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
-                    self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
-                    self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
-                    for empresa in self.empresas:
-                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
-                    self.session.findById("wnd[0]/usr/radX_OPSEL").select()
-                    self.session.findById("wnd[0]/usr/radX_AISEL").select()
-                    self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
-                    self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
-                    self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"
-                    self.session.findById("wnd[0]/usr/chkX_APAR").selected = "true"
-                    self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""
-                    self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
-                    self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
-                    self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "RELACIONAIS" # Layout
-                    self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+                    for _ in range(5):
+                        self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"# Abrir FBL1N
+                        self.session.findById("wnd[0]").sendVKey(0)# Abrir FBL1N
 
+                        self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
+                        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN015_%_APP_%-VALU_PUSH").press()#Abrir seleção multipla de Fornecedores
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpNOSV").select()# Selecionar
+                        pd.DataFrame(["FG", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
+                        self.session.findById("wnd[1]/tbar[0]/btn[24]").press()# Colar
+                        self.session.findById("wnd[1]/tbar[0]/btn[8]").press() # Selecionar todos
+                        self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
+                        
+                        self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Fornecedores
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                        self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").currentCellRow = 3
+                        self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").selectedRows = "3"
+                        self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").doubleClickCurrentCell()
+                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "1100000"
+                        self.session.findById("wnd[1]/tbar[0]/btn[8]").press()                        
+                        
+                        #self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()#Abrir seleção multipla de Fornecedores
+                        #self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
+                        self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
+                        for empresa in self.empresas:
+                            self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+                        self.session.findById("wnd[1]/tbar[0]/btn[8]").press()# OK
+                        
+                        self.session.findById("wnd[0]/usr/radX_OPSEL").select()# Selecionar partidas abertas
+                        self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""# Entrada Data Partidas em Aberto
+                        #self.session.findById("wnd[0]/usr/radX_AISEL").select()# Selecionar partidas abertas
+                        self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"# Partidas normais
+                        self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"# Partidas baixadas
+                        self.session.findById("wnd[0]/usr/chkX_MERK").selected = "true"# Partidas marcadas
+                        self.session.findById("wnd[0]/usr/chkX_APAR").selected = "true"# Partidas a pagar
+                        self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
+                        self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
+                        self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "RELACIONAIS" # Layout
+
+                        self.session.findById("wnd[0]/tbar[1]/btn[8]").press()# OK
+
+                        try:
+                            if self.session.findById("wnd[0]/usr/lbl[5,15]").text == "Consult your SAP administrator.":# Se não tiver permissão para acessar a transação
+                                continue
+                            break
+                        except:
+                            break
                     
-                    if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
+                    
+                    if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":# Se não tiver partidas
                         print(f"          {aviso_text}")
                         continue
                     
                     #import pdb; pdb.set_trace()
                     passar:bool = False
-                    for child_object in self.session.findById("wnd[0]/usr/").Children:
-                        if child_object.Text == 'Lista não contém dados':
-                            print(f"          {child_object.Text}")
+                    for child_object in self.session.findById("wnd[0]/usr/").Children:# Se não tiver partidas
+                        if child_object.Text == 'Lista não contém dados':# Se não tiver partidas
+                            print(f"          {child_object.Text}")# Se não tiver partidas
                             passar = True
                     if passar:
                         continue
                     
-                    if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !":
+                    if (error:=self.session.findById("wnd[0]/sbar").text) == "Memória escassa. Encerrar a transação antes de pausa !": 
                         raise Exception(error)
                     
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
@@ -472,9 +498,9 @@ class Preparar:
             self.session.findById("wnd[0]").close()
             sleep(1)
             try:
-                self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
+                self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()# Se tiver alguma mensagem de confirmação
             except:
-                self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()
+                self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()# Se tiver alguma mensagem de confirmação
         except Exception as error:
             print(f"não foi possivel fechar o SAP {type(error)} | {error}")
     
@@ -512,7 +538,7 @@ if __name__ == "__main__":
         bot:Preparar = Preparar(
             date=date,
             arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx",
-            #dias=1
+            #dias=1 #<----- desativar para produção
             #em_massa=False
         )
         
