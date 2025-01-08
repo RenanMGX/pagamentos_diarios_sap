@@ -1,3 +1,55 @@
+# descrição
+# Este script automatiza a preparação de documentos de pagamento diários usando SAP e arquivos Excel.
+# Classes:
+#     Preparar: Uma classe para lidar com a preparação de documentos de pagamento.
+# Funções:
+#     __init__(self, *, date: datetime, arquivo_datas: str, em_massa=True, dias: int=8) -> None:
+#         Inicializa a classe Preparar.
+#     path_files(self) -> str:
+#         Retorna o caminho onde os arquivos são armazenados.
+#     arquivo_datas(self) -> pd.DataFrame:
+#         Retorna o DataFrame contendo informações de datas do arquivo Excel.
+#     datas(self) -> dict:
+#         Retorna o dicionário contendo as datas de execução.
+#     session(self) -> win32com.client.CDispatch:
+#         Retorna o objeto de sessão do SAP.
+#     fornecedores_c_debitos_excel(self) -> str:
+#         Retorna o nome do arquivo para fornecedores com saldos de débito em formato Excel.
+#     fornecedores_c_debitos_txt(self) -> str:
+#         Retorna o nome do arquivo para fornecedores com saldos de débito em formato texto.
+#     fornecedores_pgto_T_excel(self) -> str:
+#         Retorna o nome do arquivo para fornecedores a serem pagos em formato Excel.
+#     fornecedores_pgto_T_txt(self) -> str:
+#         Retorna o nome do arquivo para fornecedores a serem pagos em formato texto.
+#     lista_relacionais(self) -> str:
+#         Retorna o nome do arquivo para a lista relacional em formato texto.
+#     montar_datas(self, datas_execucao: Dict[str, datetime]) -> dict:
+#         Constrói as datas de execução com base na data fornecida e no número de dias.
+#     __verificar_conections(f):
+#         Decorador para verificar conexões SAP.
+#     conectar_sap(self, *, user: str, password: str, ambiente: Literal["S4P", "S4Q"]) -> bool:
+#         Conecta ao sistema SAP usando as credenciais fornecidas.
+#     primeiro_extrair_fornecedores_fbl1n(self) -> None:
+#         Extrai fornecedores com itens em aberto a débito da transação FBL1N no SAP.
+#     segundo_preparar_documentos(self, *, caminho_fornecedores_pgto_T: str) -> None:
+#         Prepara documentos para pagamento.
+#     terceiro_preparar_documentos_tipo_t(self) -> None:
+#         Prepara documentos do tipo transferência (T) na FBL1N.
+#     quarto_preparar_documentos_tipo_b(self) -> None:
+#         Prepara documentos do tipo Boleto (B) com DDA marcado na FBL1N.
+#     quinto_preparar_documentos_relacionais(self) -> None:
+#         Prepara documentos relacionais na FBL1N.
+#     fechar_sap(self) -> None:
+#         Fecha a sessão do SAP.
+#     _fechar_excel(self, file_name: str, *, timeout: int=15) -> None:
+#         Fecha o arquivo Excel especificado.
+#     _verificar_sap_aberto(self) -> bool:
+#         Verifica se o aplicativo SAP está aberto.
+# Bloco de execução principal para rodar o script de automação.
+
+#fim drescrição
+
+
 import win32com.client
 import os
 import pandas as pd
@@ -20,6 +72,17 @@ from Entities.dependencies.logs import Logs
 
 class Preparar:
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True, dias:int=8) -> None:
+        """Inicializa a classe Preparar.
+        Args:
+            date (datetime): A data para a qual os documentos estão sendo preparados.
+            arquivo_datas (str): O caminho para o arquivo Excel contendo informações de datas.
+            em_massa (bool, opcional): Indicador se a operação é em massa. Padrão é True.
+            dias (int, opcional): Número de dias para preparar documentos. Padrão é 8.
+        Raises:
+            TypeError: Se a data fornecida não for um objeto datetime.
+            FileNotFoundError: Se o arquivo arquivo_datas não existir.
+            Exception: Se o arquivo arquivo_datas não for um arquivo xlsx.
+        """
         if not isinstance(date, datetime):
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
@@ -137,6 +200,17 @@ class Preparar:
         
     @__verificar_conections  
     def conectar_sap(self, *, user:str, password:str, ambiente:Literal["S4P", "S4Q"]) -> bool:
+        """
+        Conecta ao sistema SAP utilizando as credenciais fornecidas.
+        Args:
+            user (str): Nome de usuário para login no SAP.
+            password (str): Senha para login no SAP.
+            ambiente (Literal["S4P", "S4Q"]): Ambiente SAP ao qual se conectar (ex: "S4P" para produção, "S4Q" para qualidade).
+        Returns:
+            bool: Retorna True se a conexão for bem-sucedida, caso contrário, levanta uma exceção.
+        Raises:
+            ConnectionError: Se não for possível se conectar ao SAP, uma exceção será levantada com a mensagem de erro.
+        """
         try:
             if not self._verificar_sap_aberto():
                 print("abrindo programa SAP")
@@ -164,6 +238,25 @@ class Preparar:
  
     # Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO    
     def primeiro_extrair_fornecedores_fbl1n(self) -> None:
+        """
+        Extrai fornecedores com itens em aberto a débito da transação FBL1N no SAP.
+        Este método executa os seguintes passos:
+        1. Verifica se a sessão SAP está conectada.
+        2. Navega para a transação FBL1N.
+        3. Limpa a seleção de fornecedores.
+        4. Insere os códigos das empresas da lista `self.empresas`.
+        5. Seleciona itens em aberto e várias caixas de seleção.
+        6. Define o layout como "EMP_C_DEBIT".
+        7. Executa a busca.
+        8. Verifica se há mensagens de aviso ou listas de dados vazias.
+        9. Exclui qualquer arquivo Excel existente com o mesmo nome.
+        10. Baixa os resultados para um arquivo Excel.
+        11. Fecha o arquivo Excel.
+        Levanta:
+            Exception: Se a sessão SAP não estiver conectada.
+            Exception: Se nenhum item for selecionado ou a lista não contiver dados.
+            Exception: Se houver um erro de memória no SAP.
+        """
         try:
             self.session
         except AttributeError:
