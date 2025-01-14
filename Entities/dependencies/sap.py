@@ -8,14 +8,25 @@ from time import sleep
 import traceback
 import sys
 
-
 class FindNewID:
     def __init__(self, connection:win32com.client.CDispatch) -> None:
+        """
+        Inicializa a classe FindNewID com uma lista de IDs de conexão.
+
+        :param connection: Objeto de conexão do SAP.
+        """
         self.__connections:list = []
         for x in range(connection.Children.Count):
             self.__connections.append(connection.Children(x).Id)
             
     def target(self, connection:win32com.client.CDispatch):
+        """
+        Encontra um novo ID de conexão que não está na lista de conexões existentes.
+
+        :param connection: Objeto de conexão do SAP.
+        :return: Índice do novo ID de conexão.
+        :raises Exception: Se a sessão não for encontrada.
+        """
         for x in range(connection.Children.Count):
             if not connection.Children(x).Id in self.__connections:
                 return x
@@ -24,13 +35,26 @@ class FindNewID:
 class SAPManipulation():
     @property
     def ambiente(self) -> str|None:
+        """
+        Retorna o ambiente do SAP.
+
+        :return: Ambiente do SAP.
+        """
         return self.__ambiente
     
     @property
     def session(self) -> win32com.client.CDispatch:
+        """
+        Retorna a sessão atual do SAP.
+
+        :return: Sessão do SAP.
+        """
         return self.__session
     @session.deleter
     def session(self):
+        """
+        Deleta a sessão atual do SAP.
+        """
         try:
             del self.__session
         except:
@@ -38,13 +62,33 @@ class SAPManipulation():
         
     @property
     def log(self) -> Logs:
+        """
+        Retorna um objeto de log.
+
+        :return: Objeto de log.
+        """
         return Logs()
     
     @property
     def using_active_conection(self) -> bool:
+        """
+        Retorna se está usando uma conexão ativa.
+
+        :return: True se estiver usando uma conexão ativa, False caso contrário.
+        """
         return self.__using_active_conection
     
     def __init__(self, *, user:str|None="", password:str|None="", ambiente:str|None="", using_active_conection:bool=False, new_conection=False) -> None:
+        """
+        Inicializa a classe SAPManipulation.
+
+        :param user: Usuário do SAP.
+        :param password: Senha do SAP.
+        :param ambiente: Ambiente do SAP.
+        :param using_active_conection: Se está usando uma conexão ativa.
+        :param new_conection: Se é uma nova conexão.
+        :raises Exception: Se não preencher todos os campos necessários.
+        """
         if not using_active_conection:
             if not ((user) and (password) and (ambiente)):
                 raise Exception(f"""é necessario preencher todos os campos \n
@@ -59,9 +103,15 @@ class SAPManipulation():
         self.__ambiente:str|None = ambiente
         self.__new_connection:bool = new_conection
          
-    #decorador
+    # Decorador para iniciar o SAP
     @staticmethod
     def start_SAP(f):
+        """
+        Decorador para iniciar o SAP antes de executar a função decorada.
+
+        :param f: Função a ser decorada.
+        :return: Função decorada.
+        """
         def wrap(self, *args, **kwargs):
             _self:SAPManipulation = self
             
@@ -79,11 +129,17 @@ class SAPManipulation():
                 except:
                     pass
             return result
-                #raise Exception("o sap precisa ser conectado primeiro!")
         return wrap
     
+    # Decorador para verificar conexões
     @staticmethod
     def __verificar_conections(f):
+        """
+        Decorador para verificar conexões antes de executar a função decorada.
+
+        :param f: Função a ser decorada.
+        :return: Função decorada.
+        """
         @wraps(f)
         def wrap(self, *args, **kwargs):
             _self:SAPManipulation = self
@@ -100,6 +156,12 @@ class SAPManipulation():
         
     @__verificar_conections
     def __conectar_sap(self) -> None:
+        """
+        Conecta ao SAP, abrindo uma nova sessão se necessário.
+
+        :raises Exception: Se não for possível conectar ao SAP.
+        :raises ConnectionError: Se ocorrer um erro de conexão.
+        """
         self.__session: win32com.client.CDispatch
         if not self.using_active_conection:
             try:
@@ -110,11 +172,17 @@ class SAPManipulation():
                 SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
                 application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
                 
-                #import pdb; pdb.set_trace()
                 for _ in range(60*60):
                     try:
                         if self.__new_connection:
                             raise Exception("Erro controlado")
+                        
+                        conected_info = application.Children(0).Children(0).Info
+                        if conected_info.SystemName.lower() != self.__ambiente.lower():# type: ignore
+                            raise Exception("Erro controlado")
+                        if conected_info.User.lower() != self.__user.lower():# type: ignore
+                            raise Exception("Erro controlado")
+                        
                         connection = application.Children(0) # type: ignore
                     except:
                         connection = application.OpenConnection(self.__ambiente, True) # type: ignore
@@ -122,7 +190,8 @@ class SAPManipulation():
                         self.session.findById("wnd[0]/usr/txtRSYST-BNAME").text = self.__user # Usuario
                         self.session.findById("wnd[0]/usr/pwdRSYST-BCODE").text = self.__password # Senha
                         self.session.findById("wnd[0]").sendVKey(0)
-                        continue
+                        break
+                    
                         
                     if _ >= ((60*60) - 2):
                         Logs().register(status='Error', description="não foi possivel se conectar a mais uma tela do SAP", exception=traceback.format_exc())
@@ -136,7 +205,6 @@ class SAPManipulation():
                     session = connection.Children(0)# type: ignore
                     
                     session.findById("wnd[0]").sendVKey(74)
-                    #import pdb; pdb.set_trace()
                     
                     sleep(1)
                     self.__session = connection.Children(novo_id.target(connection))# type: ignore
@@ -147,7 +215,14 @@ class SAPManipulation():
                         print(P(sbar, color="cyan"))
                 except:
                     pass
+                try:
+                    self.session.findById("wnd[1]/tbar[0]/btn[0]").press() 
+                except:
+                    pass
+                
                 return 
+            
+            
             except Exception as error:
                 if "connection = application.OpenConnection(self.__ambiente, True)" in traceback.format_exc():
                     raise Exception("SAP está fechado!")
@@ -172,42 +247,57 @@ class SAPManipulation():
                 else:
                     self.log.register(status='Error', description=str(error), exception=traceback.format_exc())
 
-    #@usar_sap
+    # Método para fechar o SAP
     def fechar_sap(self):
+        """
+        Fecha a sessão atual do SAP.
+        """
         print(P("fechando SAP!", color='red'))
         try:
             sleep(1)
             self.session.findById("wnd[0]").close()
             sleep(1)
-            #import pdb; pdb.set_trace()
             try:
                 try:
                     self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
                 except:
                     self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()
-                    del self.__session
-            except:
+            finally:
                 del self.__session
         except Exception as error:
             print(P(f"não foi possivel fechar o SAP {type(error)} | {error}", color='red'))
 
-        
-    
+    # Método para listar elementos
     @start_SAP
     def _listar(self, campo):
+        """
+        Lista os elementos de um campo específico.
+
+        :param campo: Campo a ser listado.
+        """
         cont = 0
         for child_object in self.session.findById(campo).Children:
             print(f"{cont}: ","ID:", child_object.Id, "| Type:", child_object.Type, "| Text:", child_object.Text)
             cont += 1
 
+    # Método para verificar se o SAP está aberto
     def __verificar_sap_aberto(self) -> bool:
+        """
+        Verifica se o SAP está aberto.
+
+        :return: True se o SAP estiver aberto, False caso contrário.
+        """
         for process in psutil.process_iter(['name']):
             if "saplogon" in process.name().lower():
                 return True
         return False    
     
+    # Método de teste
     @start_SAP
     def _teste(self):
+        """
+        Método de teste para verificar a conexão com o SAP.
+        """
         print("testado")
   
 if __name__ == "__main__":

@@ -1,55 +1,3 @@
-# descrição
-# Este script automatiza a preparação de documentos de pagamento diários usando SAP e arquivos Excel.
-# Classes:
-#     Preparar: Uma classe para lidar com a preparação de documentos de pagamento.
-# Funções:
-#     __init__(self, *, date: datetime, arquivo_datas: str, em_massa=True, dias: int=8) -> None:
-#         Inicializa a classe Preparar.
-#     path_files(self) -> str:
-#         Retorna o caminho onde os arquivos são armazenados.
-#     arquivo_datas(self) -> pd.DataFrame:
-#         Retorna o DataFrame contendo informações de datas do arquivo Excel.
-#     datas(self) -> dict:
-#         Retorna o dicionário contendo as datas de execução.
-#     session(self) -> win32com.client.CDispatch:
-#         Retorna o objeto de sessão do SAP.
-#     fornecedores_c_debitos_excel(self) -> str:
-#         Retorna o nome do arquivo para fornecedores com saldos de débito em formato Excel.
-#     fornecedores_c_debitos_txt(self) -> str:
-#         Retorna o nome do arquivo para fornecedores com saldos de débito em formato texto.
-#     fornecedores_pgto_T_excel(self) -> str:
-#         Retorna o nome do arquivo para fornecedores a serem pagos em formato Excel.
-#     fornecedores_pgto_T_txt(self) -> str:
-#         Retorna o nome do arquivo para fornecedores a serem pagos em formato texto.
-#     lista_relacionais(self) -> str:
-#         Retorna o nome do arquivo para a lista relacional em formato texto.
-#     montar_datas(self, datas_execucao: Dict[str, datetime]) -> dict:
-#         Constrói as datas de execução com base na data fornecida e no número de dias.
-#     __verificar_conections(f):
-#         Decorador para verificar conexões SAP.
-#     conectar_sap(self, *, user: str, password: str, ambiente: Literal["S4P", "S4Q"]) -> bool:
-#         Conecta ao sistema SAP usando as credenciais fornecidas.
-#     primeiro_extrair_fornecedores_fbl1n(self) -> None:
-#         Extrai fornecedores com itens em aberto a débito da transação FBL1N no SAP.
-#     segundo_preparar_documentos(self, *, caminho_fornecedores_pgto_T: str) -> None:
-#         Prepara documentos para pagamento.
-#     terceiro_preparar_documentos_tipo_t(self) -> None:
-#         Prepara documentos do tipo transferência (T) na FBL1N.
-#     quarto_preparar_documentos_tipo_b(self) -> None:
-#         Prepara documentos do tipo Boleto (B) com DDA marcado na FBL1N.
-#     quinto_preparar_documentos_relacionais(self) -> None:
-#         Prepara documentos relacionais na FBL1N.
-#     fechar_sap(self) -> None:
-#         Fecha a sessão do SAP.
-#     _fechar_excel(self, file_name: str, *, timeout: int=15) -> None:
-#         Fecha o arquivo Excel especificado.
-#     _verificar_sap_aberto(self) -> bool:
-#         Verifica se o aplicativo SAP está aberto.
-# Bloco de execução principal para rodar o script de automação.
-
-#fim drescrição
-
-
 import win32com.client
 import os
 import pandas as pd
@@ -62,15 +10,17 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from typing import Dict
 from time import sleep
-from Entities.crenciais import Credential
+from Entities.dependencies.credenciais import Credential
 from getpass import getuser
 from typing import Literal
 from Entities.log_error import LogError
 from functools import wraps
 from Entities.dependencies.sap import SAPManipulation
+from Entities.dependencies.config import Config
 from Entities.dependencies.logs import Logs
+from Entities.dependencies.functions import Functions
 
-class Preparar:
+class Preparar(SAPManipulation):
     def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True, dias:int=8) -> None:
         """Inicializa a classe Preparar.
         Args:
@@ -105,7 +55,7 @@ class Preparar:
         if not arquivo_datas.endswith("xlsx"):
             raise Exception(f"{arquivo_datas=} apenas arquivos xlsx")
         
-        self._fechar_excel(arquivo_datas)
+        Functions.fechar_excel(arquivo_datas)
         self.__arquivo_datas: pd.DataFrame = pd.read_excel(arquivo_datas)
         
         self.__datas: dict = self.montar_datas(dias_execucao)
@@ -120,8 +70,10 @@ class Preparar:
         self.__fornecedores_pgto_T_txt:str = "lista_fornecedores_pgto_T.txt"
         self.__lista_relacionais:str = "lista_relacionais.txt"
         
-        self.__session: win32com.client.CDispatch
+        #self.__session: win32com.client.CDispatch
         
+        crd:dict = Credential(Config()['credential']['crd']).load()
+        super().__init__(user=crd.get("user"), password=crd.get("password"), ambiente=crd.get("ambiente"))        
         
     @property
     def path_files(self):
@@ -135,9 +87,9 @@ class Preparar:
     def datas(self):
         return self.__datas
     
-    @property
-    def session(self):
-        return self.__session
+    # @property
+    # def session(self):
+    #     return self.__session
     
     @property
     def fornecedores_c_debitos_excel(self):
@@ -182,61 +134,8 @@ class Preparar:
         
         return datas_para_retorno
         
-    @staticmethod
-    def __verificar_conections(f):
-        @wraps(f)
-        def wrap(self, *args, **kwargs):
-            _self:Preparar = self
-            
-            result = f(_self, *args, **kwargs)
-            try:
-                if "Continuar com este logon sem encerrar os logons existentes".lower() in (choice:=_self.session.findById("wnd[1]/usr/radMULTI_LOGON_OPT2")).text.lower():
-                    choice.select()
-                    _self.session.findById("wnd[0]").sendVKey(0)
-            except:
-                pass
-            return result
-        return wrap
-        
-    @__verificar_conections  
-    def conectar_sap(self, *, user:str, password:str, ambiente:Literal["S4P", "S4Q"]) -> bool:
-        """
-        Conecta ao sistema SAP utilizando as credenciais fornecidas.
-        Args:
-            user (str): Nome de usuário para login no SAP.
-            password (str): Senha para login no SAP.
-            ambiente (Literal["S4P", "S4Q"]): Ambiente SAP ao qual se conectar (ex: "S4P" para produção, "S4Q" para qualidade).
-        Returns:
-            bool: Retorna True se a conexão for bem-sucedida, caso contrário, levanta uma exceção.
-        Raises:
-            ConnectionError: Se não for possível se conectar ao SAP, uma exceção será levantada com a mensagem de erro.
-        """
-        try:
-            if not self._verificar_sap_aberto():
-                print("abrindo programa SAP")
-                subprocess.Popen(r"C:\Program Files (x86)\SAP\FrontEnd\SapGui\saplogon.exe")
-                sleep(5)
-            
-            print("conectando ao SAP")
-
-            SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
-            application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
-            connection: win32com.client.CDispatch = application.OpenConnection(ambiente, True) # type: ignore
-            self.__session: win32com.client.CDispatch = connection.Children(0)# type: ignore
-            
-            print("digitando credenciais")
-            self.session.findById("wnd[0]/usr/txtRSYST-BNAME").text = user # Usuario
-            self.session.findById("wnd[0]/usr/pwdRSYST-BCODE").text = password # Senha
-            self.session.findById("wnd[0]").sendVKey(0)
-            
-            print("SAP conectado!")
-            return True
-        except Exception as error:
-            raise ConnectionError(f"não foi possivel se conectar ao SAP motivo: {type(error).__class__} -> {error}")
-
-
- 
-    # Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO    
+    # Extrair da FBL1N os fornecedores com partidas em aberto a DÉBITO 
+    @SAPManipulation.start_SAP   
     def primeiro_extrair_fornecedores_fbl1n(self) -> None:
         """
         Extrai fornecedores com itens em aberto a débito da transação FBL1N no SAP.
@@ -306,7 +205,7 @@ class Preparar:
                     try:
                         os.unlink(self.path_files + file)
                     except PermissionError:
-                        self._fechar_excel(file_name=file)
+                        Functions.fechar_excel(file)
                         os.unlink(self.path_files + file)
                     
             
@@ -319,11 +218,12 @@ class Preparar:
             self.session.findById("wnd[1]/usr/ctxtDY_FILENAME").text = self.fornecedores_c_debitos_excel
             self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
             
-            self._fechar_excel(file_name=self.fornecedores_c_debitos_excel)
+            Functions.fechar_excel(self.fornecedores_c_debitos_excel)
         except Exception as error:
             self.fechar_sap()
             raise Exception(error)
-        
+    
+    @SAPManipulation.start_SAP
     def segundo_preparar_documentos(self, *,caminho_fornecedores_pgto_T:str) -> None:
         print("\nPreparando Documentos\n")
         if (not caminho_fornecedores_pgto_T.endswith("\\")) or (not caminho_fornecedores_pgto_T.endswith("/")):
@@ -334,7 +234,7 @@ class Preparar:
         # self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)
         # pd.read_excel(self.path_files + self.fornecedores_c_debitos_excel)['Conta'].to_csv(self.path_files + self.fornecedores_c_debitos_txt, header=False, index=False)
 
-        self._fechar_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)
+        Functions.fechar_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)
         pd.read_excel(caminho_fornecedores_pgto_T + self.fornecedores_pgto_T_excel)['Conta'].drop_duplicates().to_csv(self.path_files + self.fornecedores_pgto_T_txt, header=False, index=False)
         
         # self._fechar_excel(self.path_files + self.fornecedores_c_debitos_excel)  
@@ -346,6 +246,7 @@ class Preparar:
         print("Documentos prontos")
     
     # Preparar os documentos na FBL1N do tipo transferência (T).
+    @SAPManipulation.start_SAP
     def terceiro_preparar_documentos_tipo_t(self) -> None:
         try:
             self.session
@@ -356,9 +257,29 @@ class Preparar:
         for key,value in self.datas.items():
                 print(f"{key} '{value['data_sap']}' -> Executando!")
                 try:
-                    #self.session.findById("wnd[0]").maximize()
                     self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
                     self.session.findById("wnd[0]").sendVKey(0)
+                    
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    sleep(.5)
+                    
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN017-LOW").text = "T"
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
+
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    
+                    sleep(.5)
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    
                     self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
                     self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
                     self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").press()
@@ -368,11 +289,9 @@ class Preparar:
                     self.session.findById("wnd[3]/tbar[0]/btn[0]").press()
                     self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
-                    self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
-                    for empresa in self.empresas:
-                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
-                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = self.empresas[1] #Empresa
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+
+                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
+                    #self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
                     self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
@@ -418,7 +337,8 @@ class Preparar:
                     print(traceback.format_exc())
         sleep(5) 
     
-    # Preparar documentos na FBL1N do tipo Boleto (B) que estejam com o DDA cravado.    
+    # Preparar documentos na FBL1N do tipo Boleto (B) que estejam com o DDA cravado.
+    @SAPManipulation.start_SAP
     def quarto_preparar_documentos_tipo_b(self) -> None:
         try:
             self.session
@@ -429,16 +349,33 @@ class Preparar:
         for key,value in self.datas.items():
                 print(f"{key} '{value['data_sap']}' -> Executando!")
                 try:
-                    #self.session.findById("wnd[0]").maximize ()
                     self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
                     self.session.findById("wnd[0]").sendVKey (0)
-                    self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
-                    self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
-                    self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press ()
-                    for empresa in self.empresas:
-                        self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
-                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,1]").text = self.empresas[1] #Empresa
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press ()
+                    
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    sleep(.5)
+                    
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN017-LOW").text = "B"
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
+
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").setFocus()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    
+                    sleep(.5)
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    
+                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
+                    #import pdb;pdb.set_trace()
+                    #self.session.findById("wnd[1]/tbar[0]/btn[8]").press ()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select ()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
                     self.session.findById("wnd[0]/usr/chkX_SHBV").selected = "true"
@@ -484,6 +421,7 @@ class Preparar:
         sleep(5)
         
     # Preparar os documentos na FBL1N do tipo Relacionais.
+    @SAPManipulation.start_SAP
     def quinto_preparar_documentos_relacionais(self) -> None:
         try:
             self.session
@@ -578,55 +516,12 @@ class Preparar:
                     print(traceback.format_exc())
         sleep(5) 
          
-            
-    def fechar_sap(self):
-        try:
-            self.session
-        except AttributeError:
-            raise Exception("o sap precisa ser conectado primeiro!")
-        
-        print("fechando SAP!")
-        try:
-            sleep(1)
-            self.session.findById("wnd[0]").close()
-            sleep(1)
-            try:
-                self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()# Se tiver alguma mensagem de confirmação
-            except:
-                self.session.findById('wnd[2]/usr/btnSPOP-OPTION1').press()# Se tiver alguma mensagem de confirmação
-        except Exception as error:
-            print(f"não foi possivel fechar o SAP {type(error)} | {error}")
-    
-    def _fechar_excel(self, file_name:str, *, timeout:int=15) -> None:
-        try:
-            if "/" in file_name:
-                file_name = file_name.split("/")[-1]
-            if "\\" in file_name:
-                file_name = file_name.split("\\")[-1]
-            for _ in range(timeout):
-                for app in xw.apps:
-                    for open_file in app.books:
-                        if file_name.lower() == open_file.name.lower():
-                            open_file.close()
-                            if len(xw.apps) <= 0:
-                                app.kill()
-                            return
-                sleep(1)
-        except:
-            print("não foi possivel encerrar o excel")
-        
-    def _verificar_sap_aberto(self) -> bool:
-        for process in psutil.process_iter(['name']):
-            if "saplogon" in process.name().lower():
-                return True
-        return False    
-
                
 if __name__ == "__main__":
     try:
         crd:dict = Credential('SAP_PRD').load()
         
-        date = datetime.now()
+        date = datetime.now()# + relativedelta(days=1)
                 
         bot:Preparar = Preparar(
             date=date,
@@ -634,8 +529,6 @@ if __name__ == "__main__":
             #dias=1 #<----- desativar para produção
             #em_massa=False
         )
-        
-        bot.conectar_sap(user=crd['user'], password=crd['password'], ambiente=crd['ambiente'])
         
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
         bot.terceiro_preparar_documentos_tipo_t()
