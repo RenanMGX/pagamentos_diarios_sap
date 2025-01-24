@@ -182,12 +182,14 @@ class F110Auto(SAPManipulation):
                 lista_ralacionais = df_contas.unique().tolist() 
                 lista_ralacionais = [x for x in lista_ralacionais if x is not None]
                 
+                
             else:
                 LogError.informativo("sem relatorio")
                 return
         else:
             lista = empresas_separada
             lista_ralacionais = empresas_separada
+
 
         LogError.informativo("relatorio da FBL1N terminado")
         #lista: list = ['N000']
@@ -205,8 +207,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
-                banco_pagamento = "PAGTO_BRADESCO"
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = "PAGTO_BRADESCO"
                 #rotina=rotinas["primeira"]
             )
 
@@ -217,8 +219,8 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao2,
                 rotina=rotinas_db.available(use_and_save=salvar_letra),
                 pagamento = "BMTU",
-                #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
-                banco_pagamento = "PAGTO_BRADESCO"
+                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                #banco_pagamento = "PAGTO_BRADESCO"
             )
         
         
@@ -548,6 +550,8 @@ class F110Auto(SAPManipulation):
         self.session.findById(CAMPOS_FBL1N[40]).selected = "true" # marca a flag do campo 'Partida-memo'
         self.session.findById(CAMPOS_FBL1N[42]).selected = "true" # marca a flag do campo 'Partida em débito'
 
+        #import pdb;pdb.set_trace()
+        
         self.session.findById("wnd[0]").sendVKey(8) # aperta F8 para executar
 
         try: # veifica se tem algum formulario para ser exibido caso contrario encerra o roteiro
