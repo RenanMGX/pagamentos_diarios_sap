@@ -23,7 +23,7 @@ class FindNewID:
 
 class SAPManipulation():
     @property
-    def ambiente(self) -> str|None:
+    def ambiente(self) -> str:
         return self.__ambiente
     
     @property
@@ -44,7 +44,7 @@ class SAPManipulation():
     def using_active_conection(self) -> bool:
         return self.__using_active_conection
     
-    def __init__(self, *, user:str|None="", password:str|None="", ambiente:str|None="", using_active_conection:bool=False, new_conection=False) -> None:
+    def __init__(self, *, user:str|None="", password:str|None="", ambiente:str="", using_active_conection:bool=False, new_conection=False) -> None:
         if not using_active_conection:
             if not ((user) and (password) and (ambiente)):
                 raise Exception(f"""é necessario preencher todos os campos \n
@@ -56,7 +56,7 @@ class SAPManipulation():
         self.__using_active_conection = using_active_conection
         self.__user:str|None = user
         self.__password:str|None = password
-        self.__ambiente:str|None = ambiente
+        self.__ambiente:str = ambiente
         self.__new_connection:bool = new_conection
          
     #decorador

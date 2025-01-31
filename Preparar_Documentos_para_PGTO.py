@@ -224,7 +224,16 @@ class Preparar(SAPManipulation):
             raise Exception(error)
     
     @SAPManipulation.start_SAP
-    def segundo_preparar_documentos(self, *,caminho_fornecedores_pgto_T:str) -> None:
+    def segundo_preparar_documentos(self, *, caminho_fornecedores_pgto_T: str) -> None:
+        """
+        Prepara documentos para pagamentos diários, lendo e gerando arquivos de fornecedores a pagar.
+
+        Args:
+            caminho_fornecedores_pgto_T (str): Caminho para a pasta que contém o arquivo Excel de fornecedores.
+
+        Raises:
+            NotADirectoryError: Se o caminho fornecido não for encontrado.
+        """
         print("\nPreparando Documentos\n")
         if (not caminho_fornecedores_pgto_T.endswith("\\")) or (not caminho_fornecedores_pgto_T.endswith("/")):
             caminho_fornecedores_pgto_T += "\\"
@@ -248,6 +257,9 @@ class Preparar(SAPManipulation):
     # Preparar os documentos na FBL1N do tipo transferência (T).
     @SAPManipulation.start_SAP
     def terceiro_preparar_documentos_tipo_t(self) -> None:
+        """
+        Altera em massa os documentos do tipo transferência (T) na FBL1N, ajustando datas e campos de pagamento.
+        """
         try:
             self.session
         except AttributeError:
@@ -340,6 +352,9 @@ class Preparar(SAPManipulation):
     # Preparar documentos na FBL1N do tipo Boleto (B) que estejam com o DDA cravado.
     @SAPManipulation.start_SAP
     def quarto_preparar_documentos_tipo_b(self) -> None:
+        """
+        Altera em massa os documentos do tipo boleto (B) com DDA, configurando datas de vencimento e atributos de pagamento.
+        """
         try:
             self.session
         except AttributeError:
@@ -423,6 +438,9 @@ class Preparar(SAPManipulation):
     # Preparar os documentos na FBL1N do tipo Relacionais.
     @SAPManipulation.start_SAP
     def quinto_preparar_documentos_relacionais(self) -> None:
+        """
+        Ajusta documentos classificados como relacionais, alterando forma de pagamento e datas relacionadas.
+        """
         try:
             self.session
         except AttributeError:
@@ -540,4 +558,3 @@ if __name__ == "__main__":
     except Exception as error:
         print(traceback.format_exc())
         Logs(name="Preparar Documento para Pagamento Diario").register(status='Error', description=str(error), exception=traceback.format_exc())
-        

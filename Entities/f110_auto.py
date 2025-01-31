@@ -18,9 +18,9 @@ try:
 except:
     from log_error import LogError
 try:
-    from Entities.rotinas import Rotinas, verificarData, RotinasDB
+    from Entities.rotinas import Rotinas, verificarData, RotinasDB, RotinasPeloPortal, RotinaNotFound
 except:
-    from rotinas import Rotinas, verificarData, RotinasDB
+    from rotinas import Rotinas, verificarData, RotinasDB, RotinasPeloPortal, RotinaNotFound
     
 try:
     from Entities.process import Processos
@@ -157,7 +157,9 @@ class F110Auto(SAPManipulation):
         if not isinstance(empresas_separada, list):
             raise TypeError("apenas Listas")
         #procurar_rotinas = Rotinas(self.__data_atual)
-        rotinas_db = RotinasDB(self.__data_atual, ambiente=self.ambiente) #type: ignore
+        #rotinas_db = RotinasDB(self.__data_atual, ambiente=self.ambiente) #type: ignore
+        
+        rotinas_portal = RotinasPeloPortal() #type: ignore
         
         # if not self._conectar():
         #     return
@@ -203,7 +205,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
                 banco_pagamento = "PAGTO_BRADESCO"
@@ -215,7 +217,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao2,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 #banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
                 banco_pagamento = "PAGTO_BRADESCO"
@@ -230,7 +232,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao3,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento="O",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
@@ -243,7 +245,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao4,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento="J",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
@@ -256,7 +258,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao5,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento="I",
                 banco_pagamento = "BRADESCO_TRIBU"
             )
@@ -269,7 +271,7 @@ class F110Auto(SAPManipulation):
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
                 data_sap_atribuicao=self.__data_sap_atribuicao,
-                rotina=rotinas_db.available(use_and_save=salvar_letra),
+                rotina_l=rotinas_portal,
                 pagamento="BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
                 #banco_pagamento = "PAGTO_BRADESCO",
@@ -284,7 +286,7 @@ class F110Auto(SAPManipulation):
             data_sap: str,
             data_proximo_dia: str,
             data_sap_atribuicao: str,
-            rotina: str,
+            rotina_l: RotinasPeloPortal,
             pagamento:Literal["BMTU", "O", "J", "I"],
             banco_pagamento:str|list,
             relacionais:bool = False
@@ -306,6 +308,14 @@ class F110Auto(SAPManipulation):
                 self.session.findById("wnd[0]").sendVKey (0)
 
                 passou_inicio:bool = False
+                
+                try:
+                    centro_com_letra = rotina_l.get(date=self.__data_atual, centro=empresa, ambiente=self.ambiente)
+                except RotinaNotFound as error:
+                    raise error
+                except:
+                    raise Exception(f"não foi possivel encontrar a rotina para a empresa {empresa}")
+                
                 for _ in range(10):
                     try:
                         sleep(1)
@@ -315,15 +325,15 @@ class F110Auto(SAPManipulation):
                         #import pdb; pdb.set_trace()
 
                         self.session.findById(CAMPOS_F110[1]).text = data_sap # Data de Execução *** Modificar ***
-                        self.session.findById(CAMPOS_F110[3]).text = empresa + rotina # Identificação 
+                        self.session.findById(CAMPOS_F110[3]).text = centro_com_letra # Identificação 
                         passou_inicio = True
                         break
                     except Exception as error:
                         msg_inicio_error = error
                 if not passou_inicio:
-                    raise Exception(f"{empresa+rotina} - {msg_inicio_error}")
+                    raise Exception(f"{centro_com_letra} - {msg_inicio_error}") #type: ignore
 
-                CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4])
+                CAMPOS_F110_ABAS = self.buscar_campo(CAMPOS_F110[4]) #type: ignore
 
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
@@ -332,6 +342,7 @@ class F110Auto(SAPManipulation):
                     LogError.informativo(f"    Aviso: {empresa} == {texto_aviso1}")
                     #raise Exception(texto_aviso1)
 
+                
                 
                 CAMPOS_F110_PARAMETRO = self.buscar_campo(CAMPOS_F110_ABAS[1])
                 CAMPOS_F110_PARAMETRO = self.buscar_campo(CAMPOS_F110_PARAMETRO[0])
@@ -346,7 +357,7 @@ class F110Auto(SAPManipulation):
                         try:
                             self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = empresa
                         except:
-                            raise Exception(f"o codigo '{rotina}' já foi utilizado para a empresa {empresa}")
+                            raise Exception(f"o codigo '{centro_com_letra}' já foi utilizado para a empresa {empresa}")
                         
                     elif "[1,0]" in child_object.Id:
                         self.session.findById(child_object.Id.replace("/app/con[0]/ses[0]/", "")).text = pagamento
@@ -447,7 +458,7 @@ class F110Auto(SAPManipulation):
                     CAMPOS_ADVERTENCIA = self.buscar_campo("wnd[2]/usr/")
                     if (texto_advertencia:=self.session.findById(CAMPOS_ADVERTENCIA[1]).Text.lower()) != "":
                         self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                        raise Exception(f"{empresa+rotina} - {texto_advertencia}")
+                        raise Exception(f"{centro_com_letra} - {texto_advertencia}")
                         #print(f"               {texto_advertencia} {empresa + rotina}")
 
                 CAMPOS_F110 = self.buscar_campo("wnd[0]/usr/")
@@ -477,7 +488,7 @@ class F110Auto(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
                     if num > (limite-2):
-                        raise TimeoutError(f"{empresa+rotina} - não foi possivel identificar se a Proposta de Pagamento foi criada!")                    
+                        raise TimeoutError(f"{centro_com_letra} - não foi possivel identificar se a Proposta de Pagamento foi criada!")                    
                     
                     
 
@@ -501,19 +512,19 @@ class F110Auto(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(14)
                     sleep(1)
                     if num > (limite-2):
-                        raise TimeoutError(f"{empresa+rotina} - não foi possivel identificar se o Programa de pagamento foi executado")                    
+                        raise TimeoutError(f"{centro_com_letra} - não foi possivel identificar se o Programa de pagamento foi executado")                    
                     
 
-                LogError.informativo(f"    Concluido:     {empresa+rotina}")
-                self.log_error.register(tipo="Concluido", descri=str(empresa+rotina), trace="")
+                LogError.informativo(f"    Concluido:     {centro_com_letra}")
+                self.log_error.register(tipo="Concluido", descri=str(centro_com_letra), trace="")
 
             except IndexError as error:
-                LogError.informativo(f"    Error: {empresa} == Empresa {empresa+rotina} não existe na tabela T001 - {error}")
+                LogError.informativo(f"    Error: {empresa} == Empresa {empresa} não existe na tabela T001 - {error}")
                 print()
                 self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:
-                LogError.informativo(f"    Error: {empresa+rotina} == {error}")
-                self.log_error.register(tipo=type(error), descri=str(f"    Error: {empresa+rotina} == {error}"), trace=traceback.format_exc())
+                LogError.informativo(f"    Error: {empresa} == {error}")
+                self.log_error.register(tipo=type(error), descri=str(f"    Error: {empresa} == {error}"), trace=traceback.format_exc())
 
     def _extrair_relatorio(self) -> bool:
         LogError.informativo("extraindo relatarios das empresas na FBL1N")

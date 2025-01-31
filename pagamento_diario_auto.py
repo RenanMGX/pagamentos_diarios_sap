@@ -1,6 +1,7 @@
 from datetime import datetime
 from Entities.f110_auto import F110Auto
 from Entities.log_error import LogError
+from Entities.dependencies.logs import Logs
 from Preparar_Documentos_para_PGTO import Preparar
 from Entities.crenciais import Credential
 from Entities.process import Processos
@@ -54,6 +55,8 @@ if __name__ == "__main__":
                     
                     if argvs.get('date'):
                         date = datetime.strptime(str(argvs.get('date')), '%Y-%m-%d')
+                    else:
+                        raise Exception("data não encontrada")
                         
                     if argvs.get('boleto'):
                         processos.boleto = bool(argvs.get('boleto'))
@@ -83,7 +86,7 @@ if __name__ == "__main__":
             else:
                 date:datetime = datetime.now()
                 date = date.replace(hour=0,minute=0,second=0,microsecond=0)
-                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=11))
+                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=0))
             
             print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
                 
@@ -132,8 +135,11 @@ if __name__ == "__main__":
                 bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
                 
             LogError.informativo("Automação Finalizada com Sucesso!")
+            Logs().register(status='Concluido', description="Automação Finalizada com Sucesso!")
         
         except Exception as error:
+            Logs().register(status='Error', description=str(error), exception=traceback.format_exc())
+            
             LogError.informativo(str(error))
             path:str = "logs/"
             if not os.path.exists(path):
