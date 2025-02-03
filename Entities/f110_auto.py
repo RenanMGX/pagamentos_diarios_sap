@@ -10,6 +10,7 @@ import xlwings as xw # type: ignore
 from sap import SAPManipulation
 from copy import deepcopy
 import sys
+import re
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -101,10 +102,10 @@ class F110Auto(SAPManipulation):
         """
         if self._verificar_conexao() == False:
             self._limpar_cache_sap()
-            LogError.informativo("não foi possivel se conectar ao SAP\n")
+            LogError.informativo("não foi possivel se conectar ao SAP\n  <django:red>")
             return False
         else:
-            LogError.informativo("conexão com o SAP estabelecida\n")
+            LogError.informativo("conexão com o SAP estabelecida\n  <django:green>")
             return True
 
     def listar(self, campo:str) -> None:
@@ -185,21 +186,21 @@ class F110Auto(SAPManipulation):
                 lista_ralacionais = [x for x in lista_ralacionais if x is not None]
                 
                 
+                LogError.informativo("relatorio da FBL1N terminado  <django:green>")
             else:
-                LogError.informativo("sem relatorio")
+                LogError.informativo("sem relatorio  <django:red>")
                 return
         else:
             lista = empresas_separada
             lista_ralacionais = empresas_separada
 
 
-        LogError.informativo("relatorio da FBL1N terminado")
         #lista: list = ['N000']
         #print(lista)
         #rotinas: list = procurar_rotinas.proxima_rotina()
-        LogError.informativo("Iniciando lançamento de pagamantos na F110")
+        LogError.informativo("Iniciando lançamento de pagamantos na F110 ")
         
-        LogError.informativo("Iniciando lançamentos dos Pagamentos Boletos")
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Boletos  <django:blue>")
         #boletos
         if processo.boleto:
             self._SAP_OP(
@@ -226,7 +227,7 @@ class F110Auto(SAPManipulation):
             )
         
         
-        LogError.informativo("Iniciando lançamentos dos Pagamentos Consumo")
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Consumo <django:blue>")
         #pagamento O
         if processo.consumo:
             self._SAP_OP(
@@ -239,7 +240,7 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
         
-        LogError.informativo("Iniciando lançamentos dos Pagamentos Imposto")
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Imposto  <django:blue>")
         #pagamento J
         if processo.imposto:
             self._SAP_OP(
@@ -252,7 +253,7 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
            
-        LogError.informativo("Iniciando lançamentos dos Pagamentos Darfs")
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Darfs  <django:blue>")
         #pagamento I
         if processo.darfs:
             self._SAP_OP(
@@ -265,7 +266,7 @@ class F110Auto(SAPManipulation):
                 banco_pagamento = "BRADESCO_TRIBU"
             )
             
-        LogError.informativo("Iniciando lançamentos dos Pagamentos Relacionais")
+        LogError.informativo("Iniciando lançamentos dos Pagamentos Relacionais  <django:blue>")
         #pagamento Relacionais
         if processo.relacionais:
             self._SAP_OP(
@@ -300,11 +301,15 @@ class F110Auto(SAPManipulation):
         '''
         
         if not isinstance(lista_empresas, list):
-            LogError.informativo("apenas listas")
+            LogError.informativo("apenas listas  <django:red>")
             return None
                 
         for empresa in lista_empresas:
             try:
+                if not self.validar_empresa(empresa):
+                    raise Exception(f"Empresa {empresa} não é valida")
+                
+
                 self.session.findById("wnd[0]").maximize ()
                 self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nf110"
                 self.session.findById("wnd[0]").sendVKey (0)
@@ -341,7 +346,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[1]).select()
 
                 if (texto_aviso1:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso1}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso1}  <django:yellow>")
                     #raise Exception(texto_aviso1)
 
                 
@@ -376,7 +381,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[2]).select()
 
                 if (texto_aviso2:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso2}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso2}  <django:yellow>")
                     #raise Exception(texto_aviso2)
 
                 CAMPOS_F110_SELECAO = self.buscar_campo(CAMPOS_F110_ABAS[2])
@@ -413,7 +418,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[3]).select()
 
                 if (texto_aviso3:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso3}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso3}  <django:yellow>")
                     #raise Exception(texto_aviso3)
 
                 CAMPOS_F110_LOG = self.buscar_campo(CAMPOS_F110_ABAS[3])
@@ -431,7 +436,7 @@ class F110Auto(SAPManipulation):
                 self.session.findById(CAMPOS_F110_ABAS[4]).select()
 
                 if (texto_aviso4:=self.session.findById("wnd[0]/sbar").Text.lower()) != "":
-                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso4}")
+                    LogError.informativo(f"    Aviso: {empresa} == {texto_aviso4}  <django:yellow>")
                     #raise Exception(texto_aviso4)
 
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
@@ -517,15 +522,15 @@ class F110Auto(SAPManipulation):
                         raise TimeoutError(f"{centro_com_letra} - não foi possivel identificar se o Programa de pagamento foi executado")                    
                     
 
-                LogError.informativo(f"    Concluido:     {centro_com_letra}")
+                LogError.informativo(f"    Concluido:     {centro_com_letra}  <django:green>")
                 self.log_error.register(tipo="Concluido", descri=str(centro_com_letra), trace="")
 
             except IndexError as error:
-                LogError.informativo(f"    Error: {empresa} == Empresa {empresa} não existe na tabela T001 - {error}")
+                LogError.informativo(f"    Error: {empresa} == Empresa {empresa} não existe na tabela T001 - {error} <django:red>")
                 print()
                 self.log_error.register(tipo=type(error), descri=f"Empresa {empresa} não existe na tabela T001 - {error}", trace=traceback.format_exc())
             except Exception as error:
-                LogError.informativo(f"    Error: {empresa} == {error}")
+                LogError.informativo(f"    Error: {empresa} == {error}  <django:red>")
                 self.log_error.register(tipo=type(error), descri=str(f"    Error: {empresa} == {error}"), trace=traceback.format_exc())
 
     def _extrair_relatorio(self) -> bool:
@@ -567,7 +572,7 @@ class F110Auto(SAPManipulation):
 
         try: # veifica se tem algum formulario para ser exibido caso contrario encerra o roteiro
             if self.session.findById('/app/con[0]/ses[0]/wnd[0]/sbar').Text == "Nenhuma partida selecionada (ver texto descritivo)":
-                LogError.informativo("Nenhuma partida selecionada (ver texto descritivo)")
+                LogError.informativo("Nenhuma partida selecionada (ver texto descritivo)  <django:red>")
                 return False
         except:
             pass
@@ -608,13 +613,17 @@ class F110Auto(SAPManipulation):
                 sleep(1)
             return False
         except:
-            LogError.informativo("não foi possivel encerrar o excel")
+            LogError.informativo("não foi possivel encerrar o excel  <django:red>")
             return False
     
     def test(self):
-        LogError.informativo("testando F110.py")
-        
-
+        LogError.informativo("testando F110.py  <django:yellow>")
+    
+    def validar_empresa(self, empresa:str):
+        empresa = str(empresa)
+        return bool(re.match(r"[A-Z]{1}\d{3}", empresa))
+    
+    
 if __name__ == "__main__":
     pass
     # register_erro: LogError = LogError()

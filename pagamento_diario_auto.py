@@ -40,13 +40,14 @@ if __name__ == "__main__":
             }
             
             processos:Processos = Processos()
+            empresas:list = []
                     
             choose_param:Literal["qas", "prd", "django"] = 'prd' #alterar entrada e ambiente SAP
             
             django_argv_path = 'django_argv.json'
             if os.path.exists(django_argv_path):
                 try:
-                    LogError.informativo("iniciando via Django")
+                    LogError.informativo("iniciando via Django <django:blue>")
                     
                     with open(django_argv_path, 'r', encoding='utf-8')as _file:
                         argvs:dict = json.load(_file)
@@ -77,10 +78,14 @@ if __name__ == "__main__":
                         processos.darfs = bool(argvs.get('darfs'))
                     else:
                         processos.darfs = True
+                        
+                    if argvs.get('empresas'):
+                        empresas = argvs['empresas']
+                        print(empresas)
                     
                     choose_param = 'django'
                 except Exception as err:
-                    LogError.informativo(str(traceback.format_exc()))
+                    LogError.informativo(f"{str(traceback.format_exc())} <django:red>")
                     sys.exit()
                 
             else:
@@ -121,26 +126,35 @@ if __name__ == "__main__":
                 processos.relacionais = True  
                 
                 bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
+                    
             
             
             elif choose_param == 'django':
-                bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+                if empresas:
+                    bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True , empresas_separada=empresas)
+                else:
+                    bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
                 
             else: # ==== "prd"
                 processos.boleto = True
                 processos.consumo = True
                 processos.imposto = True 
                 processos.darfs = True
-                processos.relacionais = True  
-                bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+                processos.relacionais = True
                 
-            LogError.informativo("Automação Finalizada com Sucesso!")
+                if empresas:
+                    bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True , empresas_separada=empresas)
+                else:                    
+                    bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+            
+            #import pdb; pdb.set_trace()  
+            LogError.informativo("Automação Finalizada com Sucesso! <django:green>")
             Logs().register(status='Concluido', description="Automação Finalizada com Sucesso!")
         
         except Exception as error:
             Logs().register(status='Error', description=str(error), exception=traceback.format_exc())
             
-            LogError.informativo(str(error))
+            LogError.informativo(f"{str(error)} <django:red>")
             path:str = "logs/"
             if not os.path.exists(path):
                 os.makedirs(path)
