@@ -409,7 +409,7 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "Boletos" # Layout
                     
-                    import pdb;pdb.set_trace()
+                    #import pdb;pdb.set_trace()
                     
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press ()
                 
