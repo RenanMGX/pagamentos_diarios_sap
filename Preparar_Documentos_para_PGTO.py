@@ -166,6 +166,9 @@ class Preparar(SAPManipulation):
             #self.session.findById("wnd[0]").maximize ()
             self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
             self.session.findById("wnd[0]").sendVKey(0)
+            
+            self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
+            
             self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
             self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
             self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press ()
@@ -272,6 +275,8 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
                     self.session.findById("wnd[0]").sendVKey(0)
                     
+                    self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
+                    
                     self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
                     sleep(.5)
                     
@@ -367,6 +372,9 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
                     self.session.findById("wnd[0]").sendVKey (0)
                     
+                    self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
+
+                    
                     self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
                     sleep(.5)
                     
@@ -400,6 +408,9 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "Boletos" # Layout
+                    
+                    import pdb;pdb.set_trace()
+                    
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press ()
                 
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
@@ -454,6 +465,8 @@ class Preparar(SAPManipulation):
                     for _ in range(5):
                         self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"# Abrir FBL1N
                         self.session.findById("wnd[0]").sendVKey(0)# Abrir FBL1N
+                        
+                        self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
 
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
                         self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN015_%_APP_%-VALU_PUSH").press()#Abrir seleção multipla de Fornecedores
@@ -540,6 +553,7 @@ if __name__ == "__main__":
         crd:dict = Credential('SAP_PRD').load()
         
         date = datetime.now()# + relativedelta(days=1)
+        #date = datetime(2025,2,6)
                 
         bot:Preparar = Preparar(
             date=date,
