@@ -306,7 +306,7 @@ class F110Auto(SAPManipulation):
             LogError.informativo("apenas listas  <django:red>")
             return None
         
-        import pdb;pdb.set_trace()    
+        #import pdb;pdb.set_trace()    
         for empresa in lista_empresas:
             try:
                 if not self.validar_empresa(empresa):

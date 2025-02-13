@@ -40,7 +40,7 @@ if __name__ == "__main__":
             }
             
             processos:Processos = Processos()
-            empresas:list = ["N000"] # LIMPAR ESSA LISTA PARA PRODUÇÂO
+            empresas:list = [] # LIMPAR ESSA LISTA PARA PRODUÇÂO
                     
             choose_param:Literal["qas", "prd", "django"] = 'prd' #alterar entrada e ambiente SAP
             
