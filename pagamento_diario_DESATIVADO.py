@@ -1,4 +1,4 @@
-from Entities.f110 import F110
+from Entities.f110_DESATIVADO import F110
 from Entities.log_error import LogError
 from Entities.process import Processos
 #from Entities.rotinas import RotinasDB

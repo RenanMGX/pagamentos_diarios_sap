@@ -280,6 +280,8 @@ class F110Auto(SAPManipulation):
                 #banco_pagamento = "PAGTO_BRADESCO",
                 relacionais=True
             )
+        
+        #import pdb;pdb.set_trace()
             
             
 #realiza as rotinas no SAP
@@ -303,7 +305,8 @@ class F110Auto(SAPManipulation):
         if not isinstance(lista_empresas, list):
             LogError.informativo("apenas listas  <django:red>")
             return None
-                
+        
+        import pdb;pdb.set_trace()    
         for empresa in lista_empresas:
             try:
                 if not self.validar_empresa(empresa):
@@ -520,8 +523,16 @@ class F110Auto(SAPManipulation):
                     sleep(1)
                     if num > (limite-2):
                         raise TimeoutError(f"{centro_com_letra} - não foi possivel identificar se o Programa de pagamento foi executado")                    
-                    
-
+                
+                self.session.findById("wnd[0]/mbar/menu[3]/menu[6]/menu[0]").select()
+                
+                if self.session.findById("wnd[0]/sbar").text == 'Não existem registros de dados para esta seleção':
+                    self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
+                    raise Exception(f"--> ARQUIVO NÃO FOI GERADO <-- 'Não existem registros de dados para esta seleção'")
+                
+                self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
+                self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
+                
                 LogError.informativo(f"    Concluido:     {centro_com_letra}  <django:green>")
                 self.log_error.register(tipo="Concluido", descri=str(centro_com_letra), trace="")
 

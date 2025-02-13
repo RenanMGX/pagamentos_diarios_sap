@@ -258,6 +258,11 @@ class SAPManipulation():
             self.session.findById("wnd[0]").close()
             sleep(1)
             try:
+                self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                self.session.findById("wnd[0]").close()
+            except:
+                pass
+            try:
                 try:
                     self.session.findById('wnd[1]/usr/btnSPOP-OPTION1').press()
                 except:

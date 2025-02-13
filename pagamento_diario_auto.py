@@ -40,7 +40,7 @@ if __name__ == "__main__":
             }
             
             processos:Processos = Processos()
-            empresas:list = []
+            empresas:list = ["N000"] # LIMPAR ESSA LISTA PARA PRODUÇÂO
                     
             choose_param:Literal["qas", "prd", "django"] = 'prd' #alterar entrada e ambiente SAP
             
@@ -120,10 +120,10 @@ if __name__ == "__main__":
             #empresas_separada=["N013"]
             if choose_param == "qas":
                 processos.boleto = True
-                processos.consumo = True
-                processos.imposto = True 
-                processos.darfs = True
-                processos.relacionais = True  
+                processos.consumo = False
+                processos.imposto = False 
+                processos.darfs = False
+                processos.relacionais = False  
                 
                 bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
                     
@@ -146,8 +146,8 @@ if __name__ == "__main__":
                     bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True , empresas_separada=empresas)
                 else:                    
                     bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
+                        
             
-            #import pdb; pdb.set_trace()  
             LogError.informativo("Automação Finalizada com Sucesso! <django:green>")
             Logs().register(status='Concluido', description="Automação Finalizada com Sucesso!")
         
