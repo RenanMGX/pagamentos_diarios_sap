@@ -526,9 +526,11 @@ class F110Auto(SAPManipulation):
                 
                 self.session.findById("wnd[0]/mbar/menu[3]/menu[6]/menu[0]").select()
                 
-                if self.session.findById("wnd[0]/sbar").text == 'Não existem registros de dados para esta seleção':
+                if (resposta:=self.session.findById("wnd[0]/sbar").text) != '':
                     self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
-                    raise Exception(f"--> ARQUIVO NÃO FOI GERADO <-- 'Não existem registros de dados para esta seleção'")
+                    if resposta == 'Não existem registros de dados para esta seleção':
+                        raise Exception(f"--> ARQUIVO NÃO FOI GERADO <-- 'Não existem registros de dados para esta seleção'")
+                    raise Exception(f" Resposta do SAP --> {resposta}")
                 
                 self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
                 self.session.findById("wnd[0]/tbar[0]/btn[3]").press()
