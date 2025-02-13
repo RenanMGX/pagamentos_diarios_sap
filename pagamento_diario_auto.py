@@ -59,25 +59,30 @@ if __name__ == "__main__":
                     else:
                         raise Exception("data não encontrada")
                         
-                    if argvs.get('boleto'):
+                    if 'boleto' in argvs:
                         processos.boleto = bool(argvs.get('boleto'))
                     else:
                         processos.boleto = True
                         
-                    if argvs.get('consumo'):
+                    if 'consumo' in argvs:
                         processos.consumo = bool(argvs.get('consumo'))
                     else:
                         processos.consumo = True
                         
-                    if argvs.get('imposto'):
+                    if 'imposto' in argvs:
                         processos.imposto = bool(argvs.get('imposto'))
                     else:
                         processos.imposto = True
                         
-                    if argvs.get('darfs'):
+                    if 'darfs' in argvs:
                         processos.darfs = bool(argvs.get('darfs'))
                     else:
                         processos.darfs = True
+                        
+                    if 'relacionais' in argvs:
+                        processos.relacionais = bool(argvs.get('relacionais'))
+                    else:
+                        processos.relacionais = True
                         
                     if argvs.get('empresas'):
                         empresas = argvs['empresas']
@@ -92,6 +97,8 @@ if __name__ == "__main__":
                 date:datetime = datetime.now()
                 date = date.replace(hour=0,minute=0,second=0,microsecond=0)
                 date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=0))
+                
+            #import pdb; pdb.set_trace()
             
             print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
                 

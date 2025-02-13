@@ -7,7 +7,10 @@ class Processos:
         self.__relacionais:bool = False
         
     def __str__(self) -> str:
-       return f"{self.boleto=} \n{self.consumo=} \n{self.imposto=}"
+       return f"{self.boleto=} \n{self.consumo=} \n{self.imposto=} \n{self.darfs=} \n{self.relacionais=}"
+
+    def __repr__(self) -> str:
+        return f"{self.boleto=} \n{self.consumo=} \n{self.imposto=} \n{self.darfs=} \n{self.relacionais=}"
     
     @property
     def boleto(self):
