@@ -309,7 +309,7 @@ class F110Auto(SAPManipulation):
         #import pdb;pdb.set_trace()    
         for empresa in lista_empresas:
             try:
-                if not self.validar_empresa(empresa):
+                if not F110Auto.validar_empresa(empresa):
                     raise Exception(f"Empresa {empresa} não é valida")
                 
 
@@ -632,9 +632,13 @@ class F110Auto(SAPManipulation):
     def test(self):
         LogError.informativo("testando F110.py  <django:yellow>")
     
-    def validar_empresa(self, empresa:str):
-        empresa = str(empresa)
-        return bool(re.match(r"[A-Z]{1}\d{3}", empresa))
+    @staticmethod
+    def validar_empresa(empresa:str):
+        #empresa = str(empresa)
+        #return bool(re.match(r"[A-Z]{1}\d{3}", empresa))
+        if len(empresa) == 4:
+            return True
+        return False
     
     
 if __name__ == "__main__":
