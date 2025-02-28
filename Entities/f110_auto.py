@@ -49,7 +49,7 @@ class F110Auto(SAPManipulation):
         self.nome_arquivo = f"Relatorio_SAP_{datetime.now().strftime('%d%m%Y%H%M%S')}.xlsx"
         
         
-        SAPManipulation.__init__(self, user=user,password=password,ambiente=ambiente)
+        SAPManipulation.__init__(self, user=user,password=password,ambiente=ambiente, new_conection=True)
 
     def mostrar_datas(self):
         """mostra todas as datas que serão preenchidas pelo programa

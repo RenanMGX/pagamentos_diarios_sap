@@ -73,7 +73,7 @@ class Preparar(SAPManipulation):
         #self.__session: win32com.client.CDispatch
         
         crd:dict = Credential(Config()['credential']['crd']).load()
-        super().__init__(user=crd.get("user"), password=crd.get("password"), ambiente=crd.get("ambiente"))        
+        super().__init__(user=crd.get("user"), password=crd.get("password"), ambiente=crd.get("ambiente"), new_conection=True)       
         
     @property
     def path_files(self):
