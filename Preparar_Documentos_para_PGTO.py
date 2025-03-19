@@ -471,7 +471,7 @@ class Preparar(SAPManipulation):
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
                         self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN015_%_APP_%-VALU_PUSH").press()#Abrir seleção multipla de Fornecedores
                         self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpNOSV").select()# Selecionar
-                        pd.DataFrame(["FG", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
+                        pd.DataFrame(["TC","FI", "FG", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
                         self.session.findById("wnd[1]/tbar[0]/btn[24]").press()# Colar
                         self.session.findById("wnd[1]/tbar[0]/btn[8]").press() # Selecionar todos
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
@@ -483,13 +483,16 @@ class Preparar(SAPManipulation):
                         self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").doubleClickCurrentCell()
                         self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "1100000"
                         self.session.findById("wnd[1]/tbar[0]/btn[8]").press()                        
+                        #import pdb; pdb.set_trace()
                         
                         #self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()#Abrir seleção multipla de Fornecedores
                         #self.session.findById("wnd[0]/usr").selectContextMenuItem ("DELACTX") # eliminar seleção de fornecedores
-                        self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
-                        for empresa in self.empresas:
-                            self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
-                        self.session.findById("wnd[1]/tbar[0]/btn[8]").press()# OK
+                        # self.session.findById("wnd[0]/usr/btn%_KD_BUKRS_%_APP_%-VALU_PUSH").press() #Abrir seleção multipla de Empresas
+                        # for empresa in self.empresas:
+                        #     self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = empresa #Empresa
+                        # self.session.findById("wnd[1]/tbar[0]/btn[8]").press()# OK
+                        
+                        self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
                         
                         self.session.findById("wnd[0]/usr/radX_OPSEL").select()# Selecionar partidas abertas
                         self.session.findById("wnd[0]/usr/ctxtPA_STIDA").text = ""# Entrada Data Partidas em Aberto
