@@ -25,7 +25,6 @@ class PagamentosDiariosAuto(F110Auto):
     def date(self):
         return self.__date
 
-
 if __name__ == "__main__":
     LogError.informativo_path = os.path.join(os.getcwd(), 'informativo_pgmt_diario.json')
     
@@ -97,14 +96,10 @@ if __name__ == "__main__":
                 date:datetime = datetime.now()
                 date = date.replace(hour=0,minute=0,second=0,microsecond=0)
                 date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=0))
-                
-            #import pdb; pdb.set_trace()
-            
+
             print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
-                
                             
             crd:dict = Credential(param[choose_param][1]).load()
-            
 
             preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
 
@@ -122,9 +117,7 @@ if __name__ == "__main__":
                 ambiente=param[choose_param][0],
                 date=date,
             )
-            
-            #bot.mostrar_datas()
-            #empresas_separada=["N013"]
+
             if choose_param == "qas":
                 processos.boleto = True
                 processos.consumo = False
@@ -133,8 +126,6 @@ if __name__ == "__main__":
                 processos.relacionais = False  
                 
                 bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
-                    
-            
             
             elif choose_param == 'django':
                 if empresas:
@@ -153,7 +144,11 @@ if __name__ == "__main__":
                     bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True , empresas_separada=empresas)
                 else:                    
                     bot.iniciar(processos, salvar_letra=True, fechar_sap_no_final=True)# , empresas_separada=["N017"])
-                        
+            
+            try:
+                os.unlink(bot.nome_arquivo)
+            except:
+                pass
             
             LogError.informativo("Automação Finalizada com Sucesso! <django:green>")
             Logs().register(status='Concluido', description="Automação Finalizada com Sucesso!")
