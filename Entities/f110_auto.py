@@ -237,7 +237,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao3,
                 rotina_l=rotinas_portal,
                 pagamento="O",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
                 #banco_pagamento = "BRADESCO_TRIBU"
             )
         
@@ -251,7 +251,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao4,
                 rotina_l=rotinas_portal,
                 pagamento="J",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
                 #banco_pagamento = "BRADESCO_TRIBU"
             )
            
@@ -265,7 +265,7 @@ class F110Auto(SAPManipulation):
                 data_sap_atribuicao=self.__data_sap_atribuicao5,
                 rotina_l=rotinas_portal,
                 pagamento="I",
-                banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU"],
+                banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
                 #banco_pagamento = "BRADESCO_TRIBU"
             )
             
@@ -448,6 +448,8 @@ class F110Auto(SAPManipulation):
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_ABAS[4])
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_IMPRESS[0])
                 CAMPOS_F110_IMPRESS = self.buscar_campo(CAMPOS_F110_IMPRESS[1])
+                
+                #import pdb;pdb.set_trace()
                 
                 if isinstance(banco_pagamento, list):
                     self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento[0] #Banco
