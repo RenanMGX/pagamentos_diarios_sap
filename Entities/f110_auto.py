@@ -456,9 +456,9 @@ class F110Auto(SAPManipulation):
                     if len(banco_pagamento) >= 2:
                         self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[2,2]").text = banco_pagamento[1] #Banco
                     if len(banco_pagamento) >= 3:
-                        self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[3,2]").text = banco_pagamento[2] #Banco
+                        self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI3[3,2]").text = banco_pagamento[2] #Banco
                     if len(banco_pagamento) >= 4:
-                        self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI2[4,2]").text = banco_pagamento[3] #Banco
+                        self.session.findById("wnd[0]/usr/tabsF110_TABSTRIP/tabpPRI/ssubSUBSCREEN_BODY:SAPF110V:0205/tblSAPF110VCTRL_DRPTAB/ctxtF110V-VARI4[4,2]").text = banco_pagamento[3] #Banco
                 else:
                     self.session.findById(CAMPOS_F110_IMPRESS[5]).text = banco_pagamento #Banco
 
