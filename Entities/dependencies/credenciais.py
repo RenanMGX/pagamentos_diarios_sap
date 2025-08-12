@@ -12,7 +12,7 @@ class CredentialFileNotFoundError(Exception):
         super().__init__(*args)
 
 class Credential:
-    path_raiz:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\"
+    path_raiz:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA SA\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\"
     
     @property
     def path(self):

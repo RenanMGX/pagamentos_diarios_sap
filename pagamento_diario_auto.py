@@ -101,7 +101,7 @@ if __name__ == "__main__":
                             
             crd:dict = Credential(param[choose_param][1]).load()
 
-            preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
+            preparar = Preparar(date=date, arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA SA/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx")
 
             execute_program:bool = False
             for key,value in preparar.datas.items():
