@@ -471,7 +471,7 @@ class Preparar(SAPManipulation):
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
                         self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN015_%_APP_%-VALU_PUSH").press()#Abrir seleção multipla de Fornecedores
                         self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpNOSV").select()# Selecionar
-                        pd.DataFrame(["FI", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
+                        #pd.DataFrame(["FI", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
                         self.session.findById("wnd[1]/tbar[0]/btn[24]").press()# Colar
                         self.session.findById("wnd[1]/tbar[0]/btn[8]").press() # Selecionar todos
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
