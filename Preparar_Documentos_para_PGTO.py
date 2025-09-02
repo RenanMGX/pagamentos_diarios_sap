@@ -37,7 +37,7 @@ class Preparar(SAPManipulation):
             raise TypeError("Apenas datetime é aceito")
         now: datetime = date.replace(hour=0,minute=0,second=0,microsecond=0)
         
-        self.empresas:list = ["*"]
+        self.empresas:list = ["*"] # 
         self.__em_massa:bool = em_massa
         
         dias_execucao:Dict[str,datetime] = {
@@ -123,9 +123,10 @@ class Preparar(SAPManipulation):
                         "data_atual" : value,
                         "data_sap" : value.strftime('%d.%m.%Y'),
                         "data_sap_bmtu" : value.strftime('%d.%m'),
-                        "data_sap_atribuicao" : value.strftime('%d.%m.%Y R'),
+                        "data_sap_boleto" : value.strftime('%d.%m.%Y R'),
                         "data_sap_consumo" : value.strftime('%d.%m.%Y O'),
-                        "data_sap_imposto" : value.strftime('%d.%m.%Y J')                        
+                        "data_sap_imposto" : value.strftime('%d.%m.%Y J'),
+                        "data_sap_relacionais" : value.strftime('%d.%m.%Y P'),                    
                     }
                 else:
                     print(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
@@ -167,6 +168,7 @@ class Preparar(SAPManipulation):
             self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
             self.session.findById("wnd[0]").sendVKey(0)
             
+            #import pdb; pdb.set_trace()
             self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
             
             self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
@@ -276,7 +278,6 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(0)
                     
                     self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
-                    
                     self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
                     sleep(.5)
                     
@@ -340,7 +341,8 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press() # Modificação em massa
                     sleep(1)
-                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao'] # Alterar Atribuição para pgto
+                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
+                    # self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
                     #import pdb;pdb.set_trace()
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
@@ -394,8 +396,6 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     
                     sleep(.5)
-                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
-                    
                     self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
                     #import pdb;pdb.set_trace()
                     #self.session.findById("wnd[1]/tbar[0]/btn[8]").press ()
@@ -410,6 +410,7 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "Boletos" # Layout
                     
                     #import pdb;pdb.set_trace()
+                    #import pdb; pdb.set_trace()
                     
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press ()
                 
@@ -432,7 +433,8 @@ class Preparar(SAPManipulation):
                     #import pdb;pdb.set_trace()
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press () # Modificação em massa
-                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_atribuicao']  # Alterar Atribuição para pgto
+                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
+                    # self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
                     
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
@@ -536,7 +538,7 @@ class Preparar(SAPManipulation):
                     sleep(1)
                     
                     self.session.findById("wnd[1]/usr/ctxt*BSEG-ZLSCH").text = "T" # altera a forma de pagamento
-                    self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_bmtu'] # Alterar Atribuição para pgto
+                    self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_relacionais'] # campo chave de referencia 3
                     
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey (0) # **************** Executar Modificação em Massa ****************
@@ -555,16 +557,16 @@ if __name__ == "__main__":
     try:
         crd:dict = Credential('SAP_PRD').load()
         
-        date = datetime.now()# + relativedelta(days=1)
+        date = datetime.now()# + relativedelta(days=2)
         #date = datetime(2025,2,6)
                 
         bot:Preparar = Preparar(
             date=date,
             arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx",
-            #dias=1 #<----- desativar para produção
+            #dias=1, #<----- desativar para produção
             #em_massa=False
         )
-        
+
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
         bot.terceiro_preparar_documentos_tipo_t()
         bot.quarto_preparar_documentos_tipo_b()

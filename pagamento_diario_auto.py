@@ -123,9 +123,9 @@ if __name__ == "__main__":
                 processos.consumo = False
                 processos.imposto = False 
                 processos.darfs = False
-                processos.relacionais = False  
+                processos.relacionais = True  
                 
-                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
+                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["P018"])
             
             elif choose_param == 'django':
                 if empresas:

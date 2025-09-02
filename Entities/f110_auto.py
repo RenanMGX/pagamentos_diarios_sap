@@ -38,11 +38,12 @@ class F110Auto(SAPManipulation):
 
         self.__data_atual: datetime = date
         self.__data_sap: str = self.__data_atual.strftime('%d.%m.%Y') # Data separada por pontos
-        self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m')# Valor da Atribuição
+        self.__data_sap_atribuicao: str = self.__data_atual.strftime('%d.%m') # Valor da Atribuição
         self.__data_sap_atribuicao2: str = self.__data_atual.strftime('%d.%m.%Y R') # Valor da Atribuição
         self.__data_sap_atribuicao3: str = self.__data_atual.strftime('%d.%m.%Y O') # Valor da Atribuição com O
         self.__data_sap_atribuicao4: str = self.__data_atual.strftime('%d.%m.%Y J') # Valor da Atribuição com J
         self.__data_sap_atribuicao5: str = self.__data_atual.strftime('%d.%m.%Y I') # Valor da Atribuição com I
+        self.__data_sap_atribuicao6: str = self.__data_atual.strftime('%d.%m.%Y P') # Valor da Atribuição com Partidas Relacionais
         self.__data_proximo_dia: str = (self.__data_atual + relativedelta(days=1)).strftime('%d.%m.%Y') # Data do dia seguinte a programação de PGTO 
 
         self.caminho_arquivo = f"C:\\Users\\{getuser()}\\Downloads\\"
@@ -211,8 +212,9 @@ class F110Auto(SAPManipulation):
                 rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
-                #banco_pagamento = "PAGTO_BRADESCO"
-                #rotina=rotinas["primeira"]
+                #banco_pagamento = "PAGTO_BRADESCO",
+                #rotina=rotinas["primeira"],
+                relacionais=False,
             )
 
             self._SAP_OP(
@@ -223,7 +225,8 @@ class F110Auto(SAPManipulation):
                 rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
-                #banco_pagamento = "PAGTO_BRADESCO"
+                #banco_pagamento = "PAGTO_BRADESCO",
+                relacionais=False,
             )
         
         
@@ -276,7 +279,7 @@ class F110Auto(SAPManipulation):
                 lista_empresas=lista_ralacionais,
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
-                data_sap_atribuicao=self.__data_sap_atribuicao,
+                data_sap_atribuicao=self.__data_sap_atribuicao6,
                 rotina_l=rotinas_portal,
                 pagamento="BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
