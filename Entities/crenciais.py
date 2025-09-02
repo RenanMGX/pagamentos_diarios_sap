@@ -5,9 +5,10 @@ import traceback
 from random import randint
 from getpass import getuser
 from typing import Literal
+from patrimar_dependencies.sharepointfolder import SharePointFolders
 
 class Credential:
-    def __init__(self, name_file:Literal["SAP_PRD", "SAP_QAS"], path:str=f"C:\\Users\\{getuser()}\\PATRIMAR ENGENHARIA S A\\RPA - Documentos\\RPA - Dados\\CRD\\.patrimar_rpa\\credenciais\\") -> None:
+    def __init__(self, name_file:Literal["SAP_PRD", "SAP_QAS"], path:str=SharePointFolders(r"RPA - Dados\CRD\.patrimar_rpa\credenciais").value) -> None:
         name:str = str(name_file)
         if not isinstance(path, str):
             raise TypeError("apenas strings")

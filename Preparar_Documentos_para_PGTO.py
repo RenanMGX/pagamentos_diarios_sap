@@ -10,6 +10,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from typing import Dict
 from time import sleep
+from patrimar_dependencies.sharepointfolder import SharePointFolders
 from Entities.dependencies.credenciais import Credential
 from getpass import getuser
 from typing import Literal
@@ -473,7 +474,7 @@ class Preparar(SAPManipulation):
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
                         self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN015_%_APP_%-VALU_PUSH").press()#Abrir seleção multipla de Fornecedores
                         self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpNOSV").select()# Selecionar
-                        pd.DataFrame(["TC","FI", "FG", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
+                        #pd.DataFrame(["FI", "FH", "CS", "FE"]).to_clipboard(index=False, header=False)
                         self.session.findById("wnd[1]/tbar[0]/btn[24]").press()# Colar
                         self.session.findById("wnd[1]/tbar[0]/btn[8]").press() # Selecionar todos
                         self.session.findById("wnd[0]/tbar[1]/btn[16]").press()# Selecionar
@@ -559,15 +560,15 @@ if __name__ == "__main__":
         
         date = datetime.now()# + relativedelta(days=2)
         #date = datetime(2025,2,6)
-                
+        
         bot:Preparar = Preparar(
             date=date,
-            arquivo_datas=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/Datas_Execução.xlsx",
-            #dias=1, #<----- desativar para produção
+            arquivo_datas=os.path.join(SharePointFolders(r'RPA - Dados\Pagamentos Diarios - Contas a Pagar').value, 'Datas_Execução.xlsx'),
+            #dias=1 #<----- desativar para produção
             #em_massa=False
         )
-
-        bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=f"C:/Users/{getuser()}/PATRIMAR ENGENHARIA S A/RPA - Documentos/RPA - Dados/Pagamentos Diarios - Contas a Pagar/")
+        
+        bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=SharePointFolders(r'RPA - Dados\Pagamentos Diarios - Contas a Pagar').value)
         bot.terceiro_preparar_documentos_tipo_t()
         bot.quarto_preparar_documentos_tipo_b()
         bot.quinto_preparar_documentos_relacionais()
