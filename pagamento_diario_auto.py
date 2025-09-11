@@ -96,7 +96,7 @@ if __name__ == "__main__":
             else:
                 date:datetime = datetime.now()
                 date = date.replace(hour=0,minute=0,second=0,microsecond=0)
-                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date - relativedelta(days=0))
+                date = (date + relativedelta(days=0)) if choose_param == "prd" else (date + relativedelta(days=1))
 
             print(f"{'#'*100}\nExecutando em TESTES\n{'#'*100}") if choose_param == "qas" else print(f"{'#'*100}\nExecutando em PRODUÇÃO\n{'#'*100}") if choose_param == "prd" else print(f"{'#'*100}\nEXECUTÇÃO NÃO IDENTIFICADA - {choose_param}\n{'#'*100}")
                             
@@ -124,9 +124,9 @@ if __name__ == "__main__":
                 processos.consumo = False
                 processos.imposto = False 
                 processos.darfs = False
-                processos.relacionais = True  
+                processos.relacionais = False  
                 
-                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["P018"])
+                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["P016"])
             
             elif choose_param == 'django':
                 if empresas:

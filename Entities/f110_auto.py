@@ -208,13 +208,13 @@ class F110Auto(SAPManipulation):
                 lista_empresas=lista,
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
-                data_sap_atribuicao=self.__data_sap_atribuicao,
+                data_sap_atribuicao=self.__data_sap_atribuicao2,
                 rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
                 #banco_pagamento = "PAGTO_BRADESCO",
                 #rotina=rotinas["primeira"],
-                relacionais=False,
+                relacionais=True,
             )
 
             self._SAP_OP(
@@ -226,7 +226,7 @@ class F110Auto(SAPManipulation):
                 pagamento = "BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
                 #banco_pagamento = "PAGTO_BRADESCO",
-                relacionais=False,
+                relacionais=True,
             )
         
         

@@ -262,7 +262,7 @@ class Preparar(SAPManipulation):
     
     # Preparar os documentos na FBL1N do tipo transferência (T).
     @SAPManipulation.start_SAP
-    def terceiro_preparar_documentos_tipo_t(self) -> None:
+    def terceiro_preparar_documentos_tipo_t(self, *, empresa:str) -> None:
         """
         Altera em massa os documentos do tipo transferência (T) na FBL1N, ajustando datas e campos de pagamento.
         """
@@ -278,25 +278,40 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/tbar[0]/okcd").text = "/nfbl1n"
                     self.session.findById("wnd[0]").sendVKey(0)
                     
+                    #import pdb; pdb.set_trace()
                     self.session.findById("wnd[0]/usr/ctxtKD_LIFNR-LOW").text = ""
                     self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
                     sleep(.5)
                     
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN017-LOW").text = "T"
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
-
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    #self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN017-LOW").text = "T"
+                    #self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
                     
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN017_%_APP_%-VALU_PUSH").press()
+                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").setFocus()
                     self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").doubleClickCurrentCell()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/ctxtRSCSEL_255-SLOW_I[1,0]").text = "T"
+                    #self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,1]").setFocus()
+                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,1]").press()
+                    self.session.findById("wnd[2]/usr/cntlOPTION_CONTAINER/shellcont/shell").doubleClickCurrentCell()
+                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press() 
+                       
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()                
+
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    # self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    # self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    # self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    # self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     
                     sleep(.5)
+
                     self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
                     
                     self.session.findById("wnd[0]/usr/btn%_KD_LIFNR_%_APP_%-VALU_PUSH").showContextMenu()
@@ -309,7 +324,7 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
                     self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
 
-                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
+                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = empresa
                     #self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select()
                     self.session.findById("wnd[0]/usr/chkX_NORM").selected = "true"
@@ -320,6 +335,7 @@ class Preparar(SAPManipulation):
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-LOW").text = value['data_sap'] # Data Inicial de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtSO_FAEDT-HIGH").text = value['data_sap'] # Data Final de Vencimento
                     self.session.findById("wnd[0]/usr/ctxtPA_VARI").text = "TRANSFER" # Layout
+
                     self.session.findById("wnd[0]/tbar[1]/btn[8]").press()
                     
                     if (aviso_text:=self.session.findById("wnd[0]/sbar").text) == "Nenhuma partida selecionada (ver texto descritivo)":
@@ -339,11 +355,13 @@ class Preparar(SAPManipulation):
                         raise Exception(error)
                     
                     
+                    #import pdb; pdb.set_trace()
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press() # Modificação em massa
                     sleep(1)
-                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
-                    # self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
+                    self.session.findById("wnd[1]/usr/ctxt*BSEG-ZLSCH").text = "T"
+                    #self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
+                    self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
                     #import pdb;pdb.set_trace()
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
@@ -359,7 +377,7 @@ class Preparar(SAPManipulation):
     
     # Preparar documentos na FBL1N do tipo Boleto (B) que estejam com o DDA cravado.
     @SAPManipulation.start_SAP
-    def quarto_preparar_documentos_tipo_b(self) -> None:
+    def quarto_preparar_documentos_tipo_b(self, *, empresa:str) -> None:
         """
         Altera em massa os documentos do tipo boleto (B) com DDA, configurando datas de vencimento e atributos de pagamento.
         """
@@ -382,22 +400,23 @@ class Preparar(SAPManipulation):
                     sleep(.5)
                     
                     self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN017-LOW").text = "B"
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
+                    #self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN015-LOW").text = "RE"
 
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN010_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    # self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    # self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
-                    self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").setFocus()
-                    self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
-                    self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
-                    self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/btn%_%%DYN009_%_APP_%-VALU_PUSH").press()
+                    # self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").setFocus()
+                    # self.session.findById("wnd[1]/usr/tabsTAB_STRIP/tabpSIVA/ssubSCREEN_HEADER:SAPLALDB:3010/tblSAPLALDBSINGLE/btnRSCSEL_255-SOP_I[0,0]").press()
+                    # self.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                    # self.session.findById("wnd[1]/tbar[0]/btn[8]").press()
                     
                     sleep(.5)
-                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = "*"
+                    self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+                    self.session.findById("wnd[0]/usr/ctxtKD_BUKRS-LOW").text = empresa
                     #import pdb;pdb.set_trace()
                     #self.session.findById("wnd[1]/tbar[0]/btn[8]").press ()
                     self.session.findById("wnd[0]/usr/radX_OPSEL").select ()
@@ -434,8 +453,8 @@ class Preparar(SAPManipulation):
                     #import pdb;pdb.set_trace()
                     self.session.findById("wnd[0]").sendVKey(5) # Selecionar todas a partidas
                     self.session.findById("wnd[0]/tbar[1]/btn[45]").press () # Modificação em massa
-                    self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
-                    # self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
+                    #self.session.findById("wnd[1]/usr/txt*BSEG-ZUONR").text = value['data_sap_boleto'] # Alterar Atribuição para pgto
+                    self.session.findById("wnd[1]/usr/txt*BSEG-XREF3").text = value['data_sap_boleto'] # Alterar chave de referencia 3
                     
                     if self.__em_massa:
                         self.session.findById("wnd[1]").sendVKey(0) # **************** Executar Modificação em Massa ****************
@@ -556,10 +575,10 @@ class Preparar(SAPManipulation):
                
 if __name__ == "__main__":
     try:
-        crd:dict = Credential('SAP_PRD').load()
+        #crd:dict = Credential('SAP_PRD').load()
         
         date = datetime.now()# + relativedelta(days=2)
-        #date = datetime(2025,2,6)
+        #date = datetime(2025,9,12)
         
         bot:Preparar = Preparar(
             date=date,
@@ -569,8 +588,8 @@ if __name__ == "__main__":
         )
         
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=SharePointFolders(r'RPA - Dados\Pagamentos Diarios - Contas a Pagar').value)
-        bot.terceiro_preparar_documentos_tipo_t()
-        bot.quarto_preparar_documentos_tipo_b()
+        bot.terceiro_preparar_documentos_tipo_t(empresa="*") # padrão todas as empresas "*"
+        bot.quarto_preparar_documentos_tipo_b(empresa="*") # padrão todas as empresas "*"
         bot.quinto_preparar_documentos_relacionais()
         
         bot.fechar_sap()
