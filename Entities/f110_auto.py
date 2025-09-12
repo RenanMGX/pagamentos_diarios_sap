@@ -208,7 +208,7 @@ class F110Auto(SAPManipulation):
                 lista_empresas=lista,
                 data_sap=self.__data_sap,
                 data_proximo_dia=self.__data_proximo_dia,
-                data_sap_atribuicao=self.__data_sap_atribuicao2,
+                data_sap_atribuicao=self.__data_sap_atribuicao,
                 rotina_l=rotinas_portal,
                 pagamento = "BMTU",
                 banco_pagamento = ["PAGTO_BRADESCO", "PAGTO_ITAU", "PAGTO_SANTANDE"],
