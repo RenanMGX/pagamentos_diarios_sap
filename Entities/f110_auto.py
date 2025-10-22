@@ -241,7 +241,8 @@ class F110Auto(SAPManipulation):
                 rotina_l=rotinas_portal,
                 pagamento="O",
                 banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
-                #banco_pagamento = "BRADESCO_TRIBU"
+                #banco_pagamento = "BRADESCO_TRIBU",
+                relacionais=True,
             )
         
         LogError.informativo("Iniciando lançamentos dos Pagamentos Imposto  <django:blue>")
@@ -255,7 +256,8 @@ class F110Auto(SAPManipulation):
                 rotina_l=rotinas_portal,
                 pagamento="J",
                 banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
-                #banco_pagamento = "BRADESCO_TRIBU"
+                #banco_pagamento = "BRADESCO_TRIBU",
+                relacionais=True,
             )
            
         LogError.informativo("Iniciando lançamentos dos Pagamentos Darfs  <django:blue>")
@@ -269,7 +271,8 @@ class F110Auto(SAPManipulation):
                 rotina_l=rotinas_portal,
                 pagamento="I",
                 banco_pagamento = ["BRADESCO_TRIBU", "ITAU_TRIBU"],
-                #banco_pagamento = "BRADESCO_TRIBU"
+                #banco_pagamento = "BRADESCO_TRIBU",
+                relacionais=True,
             )
             
         LogError.informativo("Iniciando lançamentos dos Pagamentos Relacionais  <django:blue>")

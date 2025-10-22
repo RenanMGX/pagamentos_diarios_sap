@@ -120,13 +120,13 @@ if __name__ == "__main__":
             )
 
             if choose_param == "qas":
-                processos.boleto = True
+                processos.boleto = False
                 processos.consumo = False
-                processos.imposto = False 
-                processos.darfs = False
+                processos.imposto = False
+                processos.darfs = True
                 processos.relacionais = False  
                 
-                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N007"])
+                bot.iniciar(processos,  salvar_letra=True, fechar_sap_no_final=True, empresas_separada=["N000"])
             
             elif choose_param == 'django':
                 if empresas:
