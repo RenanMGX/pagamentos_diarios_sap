@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 from copy import deepcopy
 from typing import Literal
 import requests
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning) #type:ignore
 from dependencies.config import Config
 
 try:
@@ -288,7 +289,7 @@ class RotinasPeloPortal:
             "centro": centro
         })
         
-        response = requests.request("POST", self.reqUrl, data=payload, headers=self.headersList)
+        response = requests.request("POST", self.reqUrl, data=payload, headers=self.headersList, verify=False)
         
         if response.status_code == 200:
             if isinstance(response.json(), str):

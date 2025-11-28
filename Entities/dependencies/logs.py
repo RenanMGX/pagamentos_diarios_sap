@@ -7,6 +7,7 @@ from .functions import Functions
 import traceback
 import asyncio
 import requests
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning) #type:ignore
 import json
 from getpass import getuser
 from socket import gethostname
@@ -52,7 +53,7 @@ class Logs:
             "exception": str(exception)
             })
 
-            response = requests.request("PATCH", reqUrl, data=payload,  headers=headersList)
+            response = requests.request("PATCH", reqUrl, data=payload,  headers=headersList, verify=False)
 
             #print(response.text)
         except Exception as error:
