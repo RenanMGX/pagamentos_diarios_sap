@@ -275,7 +275,7 @@ class RotinasDB:
         
 class RotinasPeloPortal:
     def __init__(self) -> None:
-        self.reqUrl = "http://patrimar-rpa/letrasRotinas/letras/"
+        self.reqUrl = "https://patrimar-rpa/letrasRotinas/letras/"
         self.headersList = {
             "Content-Type": "application/json",
             "Authorization": f"Token {Config()['log']['token']}" 
