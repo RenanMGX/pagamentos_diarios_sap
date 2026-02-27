@@ -62,6 +62,7 @@ class SAPManipulation():
     #decorador
     @staticmethod
     def start_SAP(f):
+        @wraps(f)
         def wrap(self, *args, **kwargs):
             _self:SAPManipulation = self
             
@@ -102,57 +103,70 @@ class SAPManipulation():
     def __conectar_sap(self) -> None:
         self.__session: win32com.client.CDispatch
         if not self.using_active_conection:
-            try:
-                if not self.__verificar_sap_aberto():
-                    subprocess.Popen(r"C:\Program Files (x86)\SAP\FrontEnd\SapGui\saplogon.exe")
-                    sleep(5)
-                
-                SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
-                application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
-                
-                #import pdb; pdb.set_trace()
-                for _ in range(60*60):
-                    try:
-                        if self.__new_connection:
-                            raise Exception("Erro controlado")
-                        connection = application.Children(0) # type: ignore
-                    except:
-                        connection = application.OpenConnection(self.__ambiente, True) # type: ignore
-                        self.__session = connection.Children(0)# type: ignore
-                        self.session.findById("wnd[0]/usr/txtRSYST-BNAME").text = self.__user # Usuario
-                        self.session.findById("wnd[0]/usr/pwdRSYST-BCODE").text = self.__password # Senha
-                        self.session.findById("wnd[0]").sendVKey(0)
-                        break
-                        
-                    if _ >= ((60*60) - 2):
-                        Logs().register(status='Error', description="não foi possivel se conectar a mais uma tela do SAP", exception=traceback.format_exc())
-                        sys.exit()
-                    
-                    if connection.Children.Count >= 6:
-                        sleep(1)
-                        continue
-                    
-                    novo_id = FindNewID(connection)
-                    session = connection.Children(0)# type: ignore
-                    session.findById("wnd[0]").sendVKey(74)
-                        
-                    
-                    sleep(1)
-                    self.__session = connection.Children(novo_id.target(connection))# type: ignore
-                    break
-                                
+            for tentativa in range(3):
                 try:
-                    if (sbar:=self.session.findById("wnd[0]/sbar").text):
-                        print(P(sbar, color="cyan"))
-                except:
-                    pass
-                return 
-            except Exception as error:
-                if "connection = application.OpenConnection(self.__ambiente, True)" in traceback.format_exc():
-                    raise Exception("SAP está fechado!")
-                else:
-                    self.log.register(status='Error', description=str(error), exception=traceback.format_exc())
-                    raise ConnectionError(f"não foi possivel se conectar ao SAP motivo: {type(error).__class__} -> {error}")
+                    if not self.__verificar_sap_aberto():
+                        subprocess.Popen(r"C:\Program Files (x86)\SAP\FrontEnd\SapGui\saplogon.exe")
+                        for _ in range(30):
+                            sleep(2)
+                            if self.__verificar_sap_aberto():
+                                sleep(5)
+                                break
+                        
+                        #sleep(15)
+                    
+                    SapGuiAuto: win32com.client.CDispatch = win32com.client.GetObject("SAPGUI")# type: ignore
+                    application: win32com.client.CDispatch = SapGuiAuto.GetScriptingEngine# type: ignore
+                    
+                    #import pdb; pdb.set_trace()
+                    for _ in range(60*60):
+                        try:
+                            if self.__new_connection:
+                                raise Exception("Erro controlado")
+                            connection = application.Children(0) # type: ignore
+                        except:
+                            connection = application.OpenConnection(self.__ambiente, True) # type: ignore
+                            self.__session = connection.Children(0)# type: ignore
+                            self.session.findById("wnd[0]/usr/txtRSYST-BNAME").text = self.__user # Usuario
+                            self.session.findById("wnd[0]/usr/pwdRSYST-BCODE").text = self.__password # Senha
+                            self.session.findById("wnd[0]").sendVKey(0)
+                            break
+                            
+                        if _ >= ((60*60) - 2):
+                            Logs().register(status='Error', description="não foi possivel se conectar a mais uma tela do SAP", exception=traceback.format_exc())
+                            sys.exit()
+                        
+                        if connection.Children.Count >= 6:
+                            sleep(1)
+                            continue
+                        
+                        novo_id = FindNewID(connection)
+                        session = connection.Children(0)# type: ignore
+                        session.findById("wnd[0]").sendVKey(74)
+                            
+                        
+                        sleep(1)
+                        self.__session = connection.Children(novo_id.target(connection))# type: ignore
+                        break
+                                    
+                    try:
+                        if (sbar:=self.session.findById("wnd[0]/sbar").text):
+                            print(P(sbar, color="cyan"))
+                    except:
+                        pass
+                    
+                    print(P(f"SAP conectado com Sucesso! na tentativa {tentativa + 1}", color='green'))
+                    return 
+                except Exception as error:
+                    if "connection = application.OpenConnection(self.__ambiente, True)" in traceback.format_exc():
+                        raise Exception("SAP está fechado!")
+                    elif "(-2147221020, 'Sintaxe inválida', None, None)" in traceback.format_exc():
+                        if tentativa >= 2:
+                            raise Exception("não foi possivel se conectar a mais uma tela do SAP")
+                        continue
+                    else:
+                        self.log.register(status='Error', description=str(error), exception=traceback.format_exc())
+                        raise ConnectionError(f"não foi possivel se conectar ao SAP motivo: {type(error).__class__} -> {error}")
         else:
             try:
                 if not self.__verificar_sap_aberto():

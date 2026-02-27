@@ -22,7 +22,7 @@ from Entities.dependencies.logs import Logs
 from Entities.dependencies.functions import Functions
 
 class Preparar(SAPManipulation):
-    def __init__(self, *, date:datetime, arquivo_datas:str, em_massa=True, dias:int=8) -> None:
+    def __init__(self, *, date:datetime, arquivo_datas:str="", em_massa=True, dias:int=8) -> None:
         """Inicializa a classe Preparar.
         Args:
             date (datetime): A data para a qual os documentos estão sendo preparados.
@@ -51,13 +51,13 @@ class Preparar(SAPManipulation):
         
         
         
-        if not os.path.exists(arquivo_datas):
-            raise FileNotFoundError(f"{arquivo_datas=} não foi encontrado!")
-        if not arquivo_datas.endswith("xlsx"):
-            raise Exception(f"{arquivo_datas=} apenas arquivos xlsx")
+        # if not os.path.exists(arquivo_datas):
+        #     raise FileNotFoundError(f"{arquivo_datas=} não foi encontrado!")
+        # if not arquivo_datas.endswith("xlsx"):
+        #     raise Exception(f"{arquivo_datas=} apenas arquivos xlsx")
         
-        Functions.fechar_excel(arquivo_datas)
-        self.__arquivo_datas: pd.DataFrame = pd.read_excel(arquivo_datas)
+        # Functions.fechar_excel(arquivo_datas)
+        # self.__arquivo_datas: pd.DataFrame = pd.read_excel(arquivo_datas)
         
         self.__datas: dict = self.montar_datas(dias_execucao)
         
@@ -80,9 +80,9 @@ class Preparar(SAPManipulation):
     def path_files(self):
         return self.__path_files
     
-    @property
-    def arquivo_datas(self):
-        return self.__arquivo_datas 
+    # @property
+    # def arquivo_datas(self):
+    #     return self.__arquivo_datas 
     
     @property
     def datas(self):
@@ -115,24 +115,24 @@ class Preparar(SAPManipulation):
     def montar_datas(self, datas_execucao:Dict[str,datetime]) -> dict:
         datas_para_retorno:dict = {}
         
-        datas_nao_permitidas:list = self.__arquivo_datas['Data'].astype(str).tolist()
+        #datas_nao_permitidas:list = self.__arquivo_datas['Data'].astype(str).tolist()
         
         for key,value in datas_execucao.items():
-            if not value.strftime('%Y-%m-%d') in datas_nao_permitidas:
-                if not ((value.weekday() == 5) or (value.weekday() == 6)):
-                    datas_para_retorno[key] = {
-                        "data_atual" : value,
-                        "data_sap" : value.strftime('%d.%m.%Y'),
-                        "data_sap_bmtu" : value.strftime('%d.%m'),
-                        "data_sap_boleto" : value.strftime('%d.%m.%Y R'),
-                        "data_sap_consumo" : value.strftime('%d.%m.%Y O'),
-                        "data_sap_imposto" : value.strftime('%d.%m.%Y J'),
-                        "data_sap_relacionais" : value.strftime('%d.%m.%Y P'),                    
-                    }
-                else:
-                    print(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
-            else:
-                print(f"a data selecionada {value.strftime('%d.%m.%Y')} não permitida")
+            #if not value.strftime('%Y-%m-%d') in datas_nao_permitidas:
+                #if not ((value.weekday() == 5) or (value.weekday() == 6)):
+            datas_para_retorno[key] = {
+                "data_atual" : value,
+                "data_sap" : value.strftime('%d.%m.%Y'),
+                "data_sap_bmtu" : value.strftime('%d.%m'),
+                "data_sap_boleto" : value.strftime('%d.%m.%Y R'),
+                "data_sap_consumo" : value.strftime('%d.%m.%Y O'),
+                "data_sap_imposto" : value.strftime('%d.%m.%Y J'),
+                "data_sap_relacionais" : value.strftime('%d.%m.%Y P'),                    
+            }
+                #else:
+                    #print(f"a data selecionada é {value.strftime('%d.%m.%Y')}, e não pode ser executada pois é final de semana")
+            #else:
+                #print(f"a data selecionada {value.strftime('%d.%m.%Y')} não permitida")
         
         return datas_para_retorno
         
@@ -586,6 +586,7 @@ if __name__ == "__main__":
             #dias=1 #<----- desativar para produção
             #em_massa=False
         )
+        ##import pdb; pdb.set_trace()
         
         bot.segundo_preparar_documentos(caminho_fornecedores_pgto_T=SharePointFolders(r'RPA - Dados\Pagamentos Diarios - Contas a Pagar').value)
         bot.terceiro_preparar_documentos_tipo_t(empresa="*") # padrão todas as empresas "*"
